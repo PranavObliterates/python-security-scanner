@@ -204,4 +204,4 @@ This project is licensed under the MIT License.
 
 ---
 
-**Built by [PranavObliterates](https://github.com/PranavObliterates)** 🚀
+**Built by Coders** 🚀
