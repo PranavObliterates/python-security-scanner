@@ -1,0 +1,8 @@
+[
+  "' OR '1'='1",
+  "' OR 1=1--",
+  "1' OR '1'='1'--",
+  "'; DROP TABLE users--",
+  "1' UNION SELECT NULL,NULL--",
+  "1; WAITFOR DELAY '0:0:2'--"
+]
