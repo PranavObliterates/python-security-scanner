@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="box">
+  <h2>[ LOGIN ]</h2>
+  {% if error %}<p class="err">{{ error }}</p>{% endif %}
+  <form method="POST">
+    <p><input type="text"     name="username" placeholder="Username" required></p>
+    <p><input type="password" name="password" placeholder="Password" required></p>
+    <p><button type="submit">Login</button></p>
+  </form>
+  <hr>
+  <p style="color:#888; font-size:0.85em;">
+    Hint: Try <code>' OR '1'='1' --</code> in the username field 😈
+  </p>
+</div>
+{% endblock %}

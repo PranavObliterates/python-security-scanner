@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="box">
+  <h2>[ SEARCH USERS ]</h2>
+  <form method="GET">
+    <input type="text" name="q" value="{{ query }}" placeholder="Search username...">
+    <button type="submit">Search</button>
+  </form>
+
+  <!-- ❌ REFLECTED XSS: query echoed without escaping -->
+  <p>Results for: <strong>{{ query | safe }}</strong></p>
+
+  {% if results %}
+    <table border="1" style="border-color:#0f0; margin-top:10px;">
+      <tr><th>ID</th><th>Username</th><th>Role</th></tr>
+      {% for row in results %}
+      <tr><td>{{ row.id }}</td><td>{{ row.username }}</td><td>{{ row.role }}</td></tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p>No results.</p>
+  {% endif %}
+</div>
+{% endblock %}

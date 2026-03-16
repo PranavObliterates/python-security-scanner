@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "security-scanner"
+version = "0.1.0"
+description = "Embedded security scanner for Python web applications (SAST + DAST)"
+requires-python = ">=3.9"
+dependencies = [
+    "flask>=2.0",
+    "markupsafe>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "coverage>=7.0",
+]

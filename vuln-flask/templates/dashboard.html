@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="box">
+  <h2>[ DASHBOARD ]</h2>
+  <p>Welcome, <strong>{{ username }}</strong>!</p>
+  <p>Role: <strong>{{ role }}</strong></p>
+  <p>Try the <a href="/search">Search</a> page for SQLi + Reflected XSS.</p>
+  <p>Try the <a href="/comments">Comments</a> page for Stored XSS.</p>
+</div>
+{% endblock %}
