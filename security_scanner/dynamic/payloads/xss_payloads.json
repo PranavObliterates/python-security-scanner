@@ -1,7 +1,0 @@
-[
-  "<script>alert('XSS')</script>",
-  "<img src=x onerror=alert('XSS')>",
-  "\"><script>alert('XSS')</script>",
-  "<svg onload=alert('XSS')>",
-  "javascript:alert('XSS')"
-]
