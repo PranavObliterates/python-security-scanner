@@ -2550,7 +2550,7 @@ App loaded with 5 routes
 
 ## 🚀 Step 2: Build the Route Discovery + Data Models + First Scanner Run
 
-This is the exciting one — after this step, you'll run `python run_scan.py` and **actually see your scanner discover routes and detect SQL injection**.
+This is the exciting one — after this step, you'll run `python run_flask_scan.py` and **actually see your scanner discover routes and detect SQL injection**.
 
 ### Create these 5 files in VS Code:
 
@@ -2832,9 +2832,9 @@ class _SQLVisitor(ast.NodeVisitor):
 
 ---
 
-**File 5 — `run_scan.py`** (create this in the **root folder**, same level as `examples/`)
+**File 5 — `run_flask_scan.py`** (create this in the **root folder**, same level as `examples/`)
 
-```python name=run_scan.py
+```python name=run_flask_scan.py
 """Run the security scanner against our vulnerable test app."""
 from examples.vulnerable_app import app
 from security_scanner.core.route_discovery import discover_flask_routes
@@ -2894,7 +2894,7 @@ print("=" * 60)
 ### Now Run It!
 
 ```bash
-python run_scan.py
+python run_flask_scan.py
 ```
 
 **You should see your scanner discover all 4 routes AND flag the SQL injection in `/user`** 🎉
@@ -2903,9 +2903,9 @@ Tell me exactly what output you get!
 
 ## @pranavshinde1
 
-(venv) D:\python-security-scanner>python run_scan.py
+(venv) D:\python-security-scanner>python run_flask_scan.py
 Traceback (most recent call last):
-  File "D:\python-security-scanner\run_scan.py", line 3, in <module>
+  File "D:\python-security-scanner\run_flask_scan.py", line 3, in <module>
     from security_scanner.core.route_discovery import discover_flask_routes
 ModuleNotFoundError: No module named 'security_scanner.core.route_discovery'
 
@@ -2997,7 +2997,7 @@ dir security_scanner\core
 You should now see `route_discovery.py` (spelled correctly). Then run:
 
 ```bash
-python run_scan.py
+python run_flask_scan.py
 ```
 
 Tell me what you get! 🚀
@@ -3005,7 +3005,7 @@ Tell me what you get! 🚀
 ## @pranavshinde1
 
 
-(venv) D:\python-security-scanner>python run_scan.py
+(venv) D:\python-security-scanner>python run_flask_scan.py
 ============================================================
   SECURITY SCANNER - First Run
 ============================================================
@@ -3200,11 +3200,11 @@ class _XSSVisitor(ast.NodeVisitor):
 
 ---
 
-### Now update `run_scan.py` to include XSS scanning:
+### Now update `run_flask_scan.py` to include XSS scanning:
 
-**Open `run_scan.py` and replace the entire content with:**
+**Open `run_flask_scan.py` and replace the entire content with:**
 
-```python name=run_scan.py
+```python name=run_flask_scan.py
 """Run the security scanner against our vulnerable test app."""
 from examples.vulnerable_app import app
 from security_scanner.core.route_discovery import discover_flask_routes
@@ -3275,7 +3275,7 @@ print("=" * 60)
 ### Run it:
 
 ```bash
-python run_scan.py
+python run_flask_scan.py
 ```
 
 **You should now see 3 findings:**
@@ -3321,7 +3321,7 @@ tell me if i have done 25 percent of promised project
 | Security header checks | 5% | ❌ Not started |
 | Dynamic testing (payload injection) | 15% | ❌ Not started |
 | Report generation (console + JSON + HTML) | 10% | ❌ Not started (basic print exists) |
-| Main `scan_app()` orchestrator | 10% | ❌ Not started (using `run_scan.py` manually) |
+| Main `scan_app()` orchestrator | 10% | ❌ Not started (using `run_flask_scan.py` manually) |
 | Documentation & README | 5% | ❌ Not started |
 | Testing (pytest) | 5% | ❌ Not started |
 
@@ -3348,7 +3348,7 @@ That's realistic in ~2 hours. Want to continue with confirming the XSS output? �
 
 ok so im conintuing the xss thing
 
-(venv) D:\python-security-scanner>python run_scan.py
+(venv) D:\python-security-scanner>python run_flask_scan.py
 ============================================================
   SECURITY SCANNER - Scanning for SQLi + XSS
 ============================================================
@@ -3535,9 +3535,9 @@ def check_flask_config(app) -> List[Finding]:
 
 ---
 
-### Update `run_scan.py` — replace the entire file with:
+### Update `run_flask_scan.py` — replace the entire file with:
 
-```python name=run_scan.py
+```python name=run_flask_scan.py
 """Run the security scanner against our vulnerable test app."""
 from examples.vulnerable_app import app
 from security_scanner.core.route_discovery import discover_flask_routes
@@ -3621,7 +3621,7 @@ print("=" * 60)
 ### Run it:
 
 ```bash
-python run_scan.py
+python run_flask_scan.py
 ```
 
 **Expected: 6 findings total** — 3 from before (1 SQLi + 2 XSS) plus 3 new config issues (debug mode, weak secret, missing CSRF).
@@ -3630,7 +3630,7 @@ Tell me what you get! 🔥
 
 ## @pranavshinde1
 
-(venv) D:\python-security-scanner>python run_scan.py
+(venv) D:\python-security-scanner>python run_flask_scan.py
 ============================================================
   SECURITY SCANNER - SQLi + XSS + Config Checks
 ============================================================
@@ -3723,7 +3723,7 @@ The debug mode check didn't fire because Flask's `debug` flag is only set when y
 
 ## 🚀 Step 5: Build the `scan_app()` Orchestrator
 
-Right now you're running everything manually in `run_scan.py`. Let's build the **real** public API so anyone can use your library with just:
+Right now you're running everything manually in `run_flask_scan.py`. Let's build the **real** public API so anyone can use your library with just:
 
 ```python
 from security_scanner import scan_app
@@ -3892,11 +3892,11 @@ class ScanResult:
 
 ---
 
-### Now update `run_scan.py` to use the clean API:
+### Now update `run_flask_scan.py` to use the clean API:
 
 (**Replace entire file**)
 
-```python name=run_scan.py
+```python name=run_flask_scan.py
 """Run the security scanner — using the clean public API."""
 from examples.vulnerable_app import app
 from security_scanner import scan_app
@@ -3945,7 +3945,7 @@ print("=" * 60)
 ### Run it:
 
 ```bash
-python run_scan.py
+python run_flask_scan.py
 ```
 
 **The output should look identical to before**, but now the magic is that all the scanning logic lives behind one clean call: `result = scan_app(app)`. That's your **library API** working.
@@ -3955,9 +3955,9 @@ Tell me the output! 🚀
 ## @pranavshinde1
 
 
-(venv) D:\python-security-scanner>python run_scan.py
+(venv) D:\python-security-scanner>python run_flask_scan.py
 Traceback (most recent call last):
-  File "D:\python-security-scanner\run_scan.py", line 3, in <module>
+  File "D:\python-security-scanner\run_flask_scan.py", line 3, in <module>
     from security_scanner import scan_app
   File "D:\python-security-scanner\security_scanner\__init__.py", line 2, in <module>
     from .core.scanner import scan_app
@@ -4000,7 +4000,7 @@ __all__ = ["scan_app", "Finding", "Severity", "VulnerabilityType", "ScanResult"]
 ### Then run:
 
 ```bash
-python run_scan.py
+python run_flask_scan.py
 ```
 
 Tell me what you get! 🔍
@@ -4008,9 +4008,9 @@ Tell me what you get! 🔍
 ## @pranavshinde1
 
 
-(venv) D:\python-security-scanner>python run_scan.py
+(venv) D:\python-security-scanner>python run_flask_scan.py
 Traceback (most recent call last):
-  File "D:\python-security-scanner\run_scan.py", line 3, in <module>
+  File "D:\python-security-scanner\run_flask_scan.py", line 3, in <module>
     from security_scanner import scan_app
   File "D:\python-security-scanner\security_scanner\__init__.py", line 2, in <module>
     from .core.scanner import scan_app
@@ -4053,14 +4053,14 @@ rmdir /s /q security_scanner\__pycache__
 ### Now run:
 
 ```bash
-python run_scan.py
+python run_flask_scan.py
 ```
 
 Tell me what happens! 🔍
 
 ## @pranavshinde1
 
-(venv) D:\python-security-scanner>python run_scan.py
+(venv) D:\python-security-scanner>python run_flask_scan.py
 ============================================================
   SECURITY SCAN REPORT — examples.vulnerable_app
   Routes scanned: 4
@@ -4134,7 +4134,7 @@ CSRFProtect(app)
 
 ## ✅ Your `scan_app()` API is working!
 
-Look at your `run_scan.py` now — the core is just **3 lines**:
+Look at your `run_flask_scan.py` now — the core is just **3 lines**:
 
 ```python
 from security_scanner import scan_app
@@ -4225,14 +4225,14 @@ def save_json_report(result: ScanResult, filepath: str) -> None:
 
 ---
 
-### Update `run_scan.py` — add JSON output at the bottom:
+### Update `run_flask_scan.py` — add JSON output at the bottom:
 
-Open `run_scan.py` and **add these lines at the very end** (don't replace, just add after the last `print` line):
+Open `run_flask_scan.py` and **add these lines at the very end** (don't replace, just add after the last `print` line):
 
-```python name=run_scan.py (add at the end)
+```python name=run_flask_scan.py (add at the end)
 # Save JSON report
 from security_scanner.reporting.json_report import save_json_report
-save_json_report(result, "scan_report.json")
+save_json_report(result, "flask_scan_report.json")
 ```
 
 ---
@@ -4240,19 +4240,19 @@ save_json_report(result, "scan_report.json")
 ### Run it:
 
 ```bash
-python run_scan.py
+python run_flask_scan.py
 ```
 
 After the normal console output, you should see:
 
 ```
-  JSON report saved to: scan_report.json
+  JSON report saved to: flask_scan_report.json
 ```
 
 ### Then check the JSON file:
 
 ```bash
-type scan_report.json
+type flask_scan_report.json
 ```
 
 You should see a nicely formatted JSON report with all 5 findings. **Tell me what you get!** 🚀
@@ -4260,7 +4260,7 @@ You should see a nicely formatted JSON report with all 5 findings. **Tell me wha
 ## @pranavshinde1
 
 (venv) D:\python-security-scanner>
-(venv) D:\python-security-scanner>type scan_report.json
+(venv) D:\python-security-scanner>type flask_scan_report.json
 {
   "scan_date": "2026-02-28 21:25:18",
   "app_name": "examples.vulnerable_app",
@@ -4419,7 +4419,7 @@ venv/
 __pycache__/
 *.pyc
 *.pyo
-scan_report.json
+flask_scan_report.json
 test.db
 .vscode/
 ```
@@ -4471,7 +4471,7 @@ venv/
 __pycache__/
 *.pyc
 *.pyo
-scan_report.json
+flask_scan_report.json
 test.db
 .vscode/
 ```
@@ -4593,7 +4593,7 @@ git rm -r --cached venv
 This one will take a moment since `venv/` has hundreds of files. Then:
 
 ```bash
-git rm --cached scan_report.json
+git rm --cached flask_scan_report.json
 git add .gitignore
 git commit -m "Remove venv, pycache, scan_report from tracking, update .gitignore"
 ```
@@ -4678,7 +4678,7 @@ pip install flask
 ### 4. Run the scanner
 
 ```bash
-python run_scan.py
+python run_flask_scan.py
 ```
 
 ---
@@ -4763,8 +4763,8 @@ python-security-scanner/
 │       └── json_report.py      # JSON report generation
 ├── examples/
 │   └── vulnerable_app.py       # Deliberately vulnerable Flask app for testing
-├── run_scan.py                 # CLI entry point
-├── scan_report.json            # Generated after scanning (git-ignored)
+├── run_flask_scan.py                 # CLI entry point
+├── flask_scan_report.json            # Generated after scanning (git-ignored)
 ├── .gitignore
 └── README.md
 ```
@@ -4954,7 +4954,7 @@ ok give me everything what is done uptill now by me n umera n what is remaining 
 | 8 | `security_scanner/models/scan_result.py` | `ScanResult` container with summary properties | ✅ |
 | 9 | `security_scanner/reporting/json_report.py` | JSON report generation + file save | ✅ |
 | 10 | `examples/vulnerable_app.py` | Deliberately vulnerable Flask app (4 routes) | ✅ |
-| 11 | `run_scan.py` | CLI entry point — runs full scan | ✅ |
+| 11 | `run_flask_scan.py` | CLI entry point — runs full scan | ✅ |
 | 12 | `README.md` | Full documentation with usage, structure, roadmap | ✅ |
 | 13 | `.gitignore` | Ignores venv, pycache, reports | ✅ |
 
@@ -5019,12 +5019,12 @@ ok give me everything what is done uptill now by me n umera n what is remaining 
 - Use Jinja2 to generate a styled HTML page
 - Show findings in a table with color-coded severity
 - Include charts/summary at the top
-- Save as `scan_report.html`
+- Save as `flask_scan_report.html`
 
 **4. Console Report Formatter** (`security_scanner/reporting/console_report.py`)
-- Move the print logic from `run_scan.py` into its own module
+- Move the print logic from `run_flask_scan.py` into its own module
 - Add `print_report(result)` function
-- Clean up `run_scan.py` to just call `scan_app()` + `print_report()`
+- Clean up `run_flask_scan.py` to just call `scan_app()` + `print_report()`
 
 **5. Safe Test App** (`examples/safe_app.py`)
 - Flask app with parameterized queries, escaped output, strong secret key
@@ -5120,7 +5120,7 @@ Since the repo is private, let me give you a comprehensive and accurate breakdow
 | 10 | **Scanner Orchestrator** | `security_scanner/core/scanner.py` — `scan_app()` public API, framework detection, deduplication | ✅ Done |
 | 11 | **Public API** | `security_scanner/__init__.py` — Clean `from security_scanner import scan_app` interface | ✅ Done |
 | 12 | **JSON Report** | `security_scanner/reporting/json_report.py` — JSON output with findings, summary, timestamps | ✅ Done |
-| 13 | **CLI Runner** | `run_scan.py` — Console output with severity icons, summary | ✅ Done |
+| 13 | **CLI Runner** | `run_flask_scan.py` — Console output with severity icons, summary | ✅ Done |
 | 14 | **README** | `README.md` — Full documentation, usage guide, project structure, roadmap | ✅ Done |
 | 15 | **Git & GitHub** | `.gitignore`, repo created, code pushed to `PranavObliterates/python-security-scanner` | ✅ Done |
 

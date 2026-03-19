@@ -1,4 +1,4 @@
-"""Create test.db with sample data for run_scan.py demonstrations."""
+"""Create test.db with sample data for run_flask_scan.py demonstrations."""
 import sqlite3
 import os
 

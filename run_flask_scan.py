@@ -12,7 +12,7 @@ result = scan_app(app, dynamic=True)
 print_report(result)
 
 # ─── Save reports ────────────────────────────────────────────
-save_json_report(result, "scan_report.json")
-save_html_report(result, "scan_report.html")
+save_json_report(result, "flask_scan_report.json")
+save_html_report(result, "flask_scan_report.html")
 
 print(f"\n   Done. {len(result.findings)} issues found in {result.scan_duration_seconds:.3f}s")

@@ -1,4 +1,4 @@
-from evaluate import evaluate, evaluate_sast, evaluate_dast, run_analyzer  # type: ignore
+from evaluate_flask import evaluate, evaluate_sast, evaluate_dast, run_analyzer  # type: ignore
 
 
 class TestSASTEvaluation:
@@ -88,6 +88,37 @@ class TestRunAnalyzer:
         source = 'x = 1'
         result = run_analyzer(source, "secrets")
         assert isinstance(result, list)
+
+    def test_ssti_analyzer_returns_list(self):
+        """run_analyzer should return a list for SSTI."""
+        source = 'x = 1'
+        result = run_analyzer(source, "ssti")
+        assert isinstance(result, list)
+
+    def test_ssti_analyzer_detects_vulnerability(self):
+        """run_analyzer should detect render_template_string with dynamic input."""
+        source = '''
+tmpl = request.args.get("tmpl")
+render_template_string(tmpl)
+        '''
+        result = run_analyzer(source, "ssti")
+        assert len(result) > 0, "SSTI analyzer should detect render_template_string with dynamic input"
+
+    def test_deserialization_analyzer_returns_list(self):
+        """run_analyzer should return a list for deserialization."""
+        source = 'x = 1'
+        result = run_analyzer(source, "deserialization")
+        assert isinstance(result, list)
+
+    def test_deserialization_analyzer_detects_pickle(self):
+        """run_analyzer should detect pickle.loads usage."""
+        source = '''
+import pickle
+data = request.POST.get("data")
+obj = pickle.loads(data)
+        '''
+        result = run_analyzer(source, "deserialization")
+        assert len(result) > 0, "Deserialization analyzer should detect pickle.loads"
 
     def test_unknown_vuln_type(self):
         """Unknown vuln type should return empty list."""

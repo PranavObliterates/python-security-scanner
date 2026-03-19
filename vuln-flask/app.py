@@ -1,10 +1,13 @@
-from flask import Flask, request, render_template, redirect, url_for, session
+from flask import Flask, request, render_template, redirect, url_for, session, render_template_string
 import sqlite3
+import base64
+import pickle
 
 app = Flask(__name__)
 app.secret_key = "totally_not_secret"   # Weak secret key (another vuln)
 
-DB = "vuln.db"
+import os
+DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vuln.db")
 
 def get_db():
     conn = sqlite3.connect(DB)
@@ -110,6 +113,24 @@ def comments():
 
     # ❌ VULNERABLE: comments rendered with |safe — raw HTML/JS executes
     return render_template("comments.html", comments=all_comments)
+
+
+@app.route("/ssti")
+def ssti_demo():
+    tmpl = request.args.get("tmpl", "Hello")
+    return render_template_string(tmpl)
+
+
+@app.route("/pickle")
+def pickle_demo():
+    data = request.args.get("data", "")
+    if data:
+        try:
+            obj = pickle.loads(base64.b64decode(data))
+            return str(obj)
+        except Exception as e:
+            return str(e), 500
+    return "No object"
 
 
 if __name__ == "__main__":

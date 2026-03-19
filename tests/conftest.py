@@ -1,6 +1,8 @@
 """Shared pytest fixtures for the security scanner test suite."""
 import sqlite3
 import os
+import base64
+import pickle
 import pytest
 from flask import Flask, request, render_template_string
 
@@ -54,6 +56,22 @@ def vulnerable_app():
             return str(e), 500
         conn.close()
         return "OK" if result else "Failed"
+
+    @app.route("/ssti")
+    def ssti_demo():
+        tmpl = request.args.get("tmpl", "Hello")
+        return render_template_string(tmpl)
+
+    @app.route("/pickle")
+    def pickle_demo():
+        data = request.args.get("data", "")
+        if data:
+            try:
+                obj = pickle.loads(base64.b64decode(data))
+                return str(obj)
+            except Exception as e:
+                return str(e), 500
+        return "No object"
 
     return app
 

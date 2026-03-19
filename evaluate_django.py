@@ -1,7 +1,7 @@
 """
 Django Evaluation Framework — measures accuracy, precision, recall for Django scanning.
 
-Similar to evaluate.py for Flask, this tests the scanner against Django-specific
+Similar to evaluate_flask.py for Flask, this tests the scanner against Django-specific
 code patterns and apps.
 
 Run with: python evaluate_django.py
@@ -27,6 +27,13 @@ if not django_settings.configured:
                 "NAME": ":memory:",
             }
         },
+        TEMPLATES=[
+            {
+                "BACKEND": "django.template.backends.django.DjangoTemplates",
+                "DIRS": [],
+                "APP_DIRS": True,
+            },
+        ],
     )
     django.setup()
 
@@ -34,10 +41,11 @@ from django.http import HttpResponse
 from django.test import Client as DjangoClient
 from django.urls import path
 from django.utils.html import escape as django_escape
-
 from security_scanner.analyzers.sql_injection import SQLInjectionAnalyzer
 from security_scanner.analyzers.xss import XSSAnalyzer
 from security_scanner.analyzers.secrets import SecretsAnalyzer
+from security_scanner.analyzers.ssti import SSTIAnalyzer
+from security_scanner.analyzers.deserialization import DeserializationAnalyzer
 from security_scanner.analyzers.config import check_django_config
 from security_scanner.core.route_discovery import discover_django_routes
 from security_scanner.dynamic.payload_tester import run_django_dast_tests
@@ -189,6 +197,47 @@ api_key = ""
         ''',
         "secrets", False
     ),
+
+    # ═══════════════════════════════════════════════════════════
+    # SSTI — TRUE POSITIVES (Django patterns)
+    # ═══════════════════════════════════════════════════════════
+    (
+        "Django SSTI: Template with user input",
+        '''
+tmpl = request.GET.get("tmpl")
+template = Template(tmpl)
+        ''',
+        "ssti", True
+    ),
+    (
+        "Django Safe SSTI: Static Template",
+        '''
+template = Template("<h1>Hello</h1>")
+        ''',
+        "ssti", False
+    ),
+
+    # ═══════════════════════════════════════════════════════════
+    # DESERIALIZATION — TRUE POSITIVES (Django patterns)
+    # ═══════════════════════════════════════════════════════════
+    (
+        "Django Deserialization: pickle.loads",
+        '''
+import pickle
+data = request.POST.get("data")
+obj = pickle.loads(data)
+        ''',
+        "deserialization", True
+    ),
+    (
+        "Django Safe Deserialization: json.loads",
+        '''
+import json
+data = request.POST.get("data")
+obj = json.loads(data)
+        ''',
+        "deserialization", False
+    ),
 ]
 
 
@@ -214,7 +263,24 @@ def _build_dast_vulnerable_django_app():
         term = request.GET.get("q", "")
         return HttpResponse(f"<h1>Results for: {term}</h1>")
 
-    return [vuln_user, vuln_search]
+    def vuln_ssti(request):
+        from django.template import Template, Context
+        tmpl = request.GET.get("q", "Hello")
+        template = Template(tmpl)
+        return HttpResponse(template.render(Context({})))
+
+    def vuln_pickle(request):
+        import pickle, base64
+        data = request.GET.get("q", "")
+        if data:
+            try:
+                obj = pickle.loads(base64.b64decode(data))
+                return HttpResponse(str(obj))
+            except Exception as e:
+                return HttpResponse(str(e), status=500)
+        return HttpResponse("No object")
+
+    return [vuln_user, vuln_search, vuln_ssti, vuln_pickle]
 
 
 def _build_dast_safe_django_app():
@@ -243,6 +309,8 @@ _safe_views = _build_dast_safe_django_app()
 urlpatterns = [
     path("vuln/user/", _vuln_views[0], name="vuln_user"),
     path("vuln/search/", _vuln_views[1], name="vuln_search"),
+    path("vuln/ssti/", _vuln_views[2], name="vuln_ssti"),
+    path("vuln/pickle/", _vuln_views[3], name="vuln_pickle"),
     path("safe/user/", _safe_views[0], name="safe_user"),
     path("safe/search/", _safe_views[1], name="safe_search"),
 ]
@@ -258,6 +326,10 @@ def run_analyzer(source_code, vuln_type):
         analyzer = XSSAnalyzer("/test", "test.py", source_code)
     elif vuln_type == "secrets":
         analyzer = SecretsAnalyzer("/test", "test.py", source_code)
+    elif vuln_type == "ssti":
+        analyzer = SSTIAnalyzer("/test", "test.py", source_code)
+    elif vuln_type == "deserialization":
+        analyzer = DeserializationAnalyzer("/test", "test.py", source_code)
     else:
         return []
     return analyzer.analyze()
@@ -395,7 +467,33 @@ def evaluate_django_dast():
         print(f"  [ERR]    DAST Django XSS: {e}")
         fn += 1
 
-    # Test 3: Safe routes should NOT trigger SQLi
+    # Test SSTI
+    try:
+        ssti_found = any(f.vuln_type == VulnerabilityType.SSTI for f in vuln_findings)
+        if ssti_found:
+            print("  [OK] TP  DAST Django SSTI: detects template injection in /vuln/ssti/")
+            tp += 1
+        else:
+            print("  [XX] FN  DAST Django SSTI: missed template injection in /vuln/ssti/")
+            fn += 1
+    except Exception as e:
+        print(f"  [ERR]    DAST Django SSTI: {e}")
+        fn += 1
+
+    # Test Deserialization
+    try:
+        deser_found = any(f.vuln_type == VulnerabilityType.INSECURE_DESERIALIZATION for f in vuln_findings)
+        if deser_found:
+            print("  [OK] TP  DAST Django Deser: detects insecure deserialization in /vuln/pickle/")
+            tp += 1
+        else:
+            print("  [XX] FN  DAST Django Deser: missed insecure deserialization in /vuln/pickle/")
+            fn += 1
+    except Exception as e:
+        print(f"  [ERR]    DAST Django Deser: {e}")
+        fn += 1
+
+    # Safe routes tests
     try:
         safe_findings = run_django_dast_tests(safe_routes)
         sqli_found = any(f.vuln_type == VulnerabilityType.SQL_INJECTION for f in safe_findings)

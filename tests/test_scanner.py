@@ -36,6 +36,19 @@ class TestScanApp:
                     if f.vuln_type == VulnerabilityType.HARDCODED_SECRET]
         assert len(secrets) >= 1
 
+    def test_finds_ssti(self, vulnerable_app):
+        """Should detect SSTI in render_template_string with dynamic input."""
+        result = scan_app(vulnerable_app, dynamic=False)
+        ssti = [f for f in result.findings if f.vuln_type == VulnerabilityType.SSTI]
+        assert len(ssti) >= 1
+
+    def test_finds_deserialization(self, vulnerable_app):
+        """Should detect insecure deserialization via pickle.loads."""
+        result = scan_app(vulnerable_app, dynamic=False)
+        deser = [f for f in result.findings
+                 if f.vuln_type == VulnerabilityType.INSECURE_DESERIALIZATION]
+        assert len(deser) >= 1
+
     def test_summary_string(self, vulnerable_app):
         """Summary should contain counts."""
         result = scan_app(vulnerable_app, dynamic=False)

@@ -1,6 +1,8 @@
 """Intentionally vulnerable Flask app for testing the scanner."""
 from flask import Flask, request, render_template_string
 import sqlite3
+import base64
+import pickle
 
 app = Flask(__name__)
 app.secret_key = "password123"  # VULN: weak hardcoded secret
@@ -70,6 +72,24 @@ def open_redirect():
     url = request.args.get("url", "/")
     # VULN: Open redirect (not currently detected, but good test case)
     return f'<meta http-equiv="refresh" content="0;url={url}">'
+
+
+@app.route("/ssti")
+def ssti_demo():
+    tmpl = request.args.get("tmpl", "Hello")
+    return render_template_string(tmpl)
+
+
+@app.route("/pickle")
+def pickle_demo():
+    data = request.args.get("data", "")
+    if data:
+        try:
+            obj = pickle.loads(base64.b64decode(data))
+            return str(obj)
+        except Exception as e:
+            return str(e), 500
+    return "No object"
 
 
 if __name__ == "__main__":

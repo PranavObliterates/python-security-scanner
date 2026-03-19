@@ -54,7 +54,7 @@ def run_suite():
             result = scan_app(app, dynamic=False)
             
             # Count specific categories of findings
-            code_findings = [f for f in result.findings if f.vuln_type.value in ("SQL_INJECTION", "XSS")]
+            code_findings = [f for f in result.findings if f.vuln_type.value in ("SQL_INJECTION", "XSS", "SSTI", "INSECURE_DESERIALIZATION")]
             secret_findings = [f for f in result.findings if f.vuln_type.value == "HARDCODED_SECRET"]
             config_findings = [f for f in result.findings if f.vuln_type.value in ("CSRF_MISSING", "DEBUG_MODE")]
             

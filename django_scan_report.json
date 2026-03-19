@@ -1,11 +1,11 @@
 {
-  "scan_date": "2026-03-16 22:51:58",
+  "scan_date": "2026-03-19 16:13:40",
   "app_name": "django.core.handlers.wsgi",
-  "routes_scanned": 5,
-  "scan_duration_seconds": 1.082,
+  "routes_scanned": 7,
+  "scan_duration_seconds": 4.797,
   "summary": {
-    "total_issues": 16,
-    "critical": 7,
+    "total_issues": 19,
+    "critical": 10,
     "high": 3,
     "medium": 5,
     "low": 1
@@ -66,6 +66,34 @@
       "fix_before": "api_key = \"sk-live-abcdef123456\"",
       "fix_after": "import os\napi_key = os.environ.get(\"API_KEY\")",
       "reference": "https://owasp.org/www-community/vulnerabilities/Use_of_hard-coded_password"
+    },
+    {
+      "type": "SSTI",
+      "severity": "CRITICAL",
+      "source": "SAST",
+      "endpoint": "/ssti/",
+      "file": "C:\\Users\\prana\\Downloads\\python_security_scanner_library_project\\examples\\vulnerable_django_app.py",
+      "line": 4,
+      "code": "template = Template(tmpl)",
+      "explanation": "Variable appears to come from user input and is interpolated directly into a template string, enabling Server-Side Template Injection.",
+      "fix": "Use render_template() with a static template file instead of rendering strings dynamically. If you must use strings, ensure input is strictly validated or sandboxed.",
+      "fix_before": "render_template_string(f'Hello {user_input}')",
+      "fix_after": "render_template('hello.html', name=user_input)",
+      "reference": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Template_Injection_Prevention_Cheat_Sheet.html"
+    },
+    {
+      "type": "INSECURE_DESERIALIZATION",
+      "severity": "CRITICAL",
+      "source": "SAST",
+      "endpoint": "/pickle/",
+      "file": "C:\\Users\\prana\\Downloads\\python_security_scanner_library_project\\examples\\vulnerable_django_app.py",
+      "line": 6,
+      "code": "obj = pickle.loads(base64.b64decode(data))",
+      "explanation": "Usage of pickle.loads() detected. This function is inherently unsafe and can execute arbitrary code during deserialization.",
+      "fix": "Use safer serialization formats like JSON (json.loads()) instead of pickle for unstrusted data.",
+      "fix_before": "pickle.loads(user_data)",
+      "fix_after": "json.loads(user_data)",
+      "reference": "https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html"
     },
     {
       "type": "DEBUG_MODE",
@@ -150,6 +178,20 @@
       "fix_before": "HttpResponse(f\"...{id}...\")",
       "fix_after": "from django.utils.html import escape\nHttpResponse(f\"...{escape(id)}...\")",
       "reference": "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html"
+    },
+    {
+      "type": "INSECURE_DESERIALIZATION",
+      "severity": "CRITICAL",
+      "source": "DAST",
+      "endpoint": "/user/",
+      "file": "(dynamic test)",
+      "line": 0,
+      "code": "GET /user/?id=<Base64_Pickle>",
+      "explanation": "Sending a serialized payload as parameter 'id' caused a 500 error, indicating the server might be insecurely deserializing data.",
+      "fix": "Do not use unsafe deserialization formats like pickle.",
+      "fix_before": "pickle.loads(data)",
+      "fix_after": "json.loads(data)",
+      "reference": "https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html"
     },
     {
       "type": "XSS",

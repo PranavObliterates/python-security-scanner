@@ -15,6 +15,9 @@ import django
 from django.conf import settings
 from django.http import HttpResponse
 from django.urls import path
+from django.template import Template, Context
+import base64
+import pickle
 
 # ─── Django Settings (inline for single-file app) ──────────────────────────────
 if not settings.configured:
@@ -76,6 +79,26 @@ def admin_panel(request):
     return HttpResponse(f"Admin API key: {api_key}")
 
 
+def ssti_demo(request):
+    """VULNERABLE: SSTI."""
+    tmpl = request.GET.get("tmpl", "Hello")
+    template = Template(tmpl)
+    context = Context({})
+    return HttpResponse(template.render(context))
+
+
+def pickle_demo(request):
+    """VULNERABLE: Insecure Deserialization."""
+    data = request.GET.get("data", "")
+    if data:
+        try:
+            obj = pickle.loads(base64.b64decode(data))
+            return HttpResponse(str(obj))
+        except Exception as e:
+            return HttpResponse(str(e), status=500)
+    return HttpResponse("No object")
+
+
 # ─── URL Patterns ───────────────────────────────────────────────────────────────
 
 urlpatterns = [
@@ -84,6 +107,8 @@ urlpatterns = [
     path("search/", search, name="search"),
     path("profile/", profile, name="profile"),
     path("admin/", admin_panel, name="admin_panel"),
+    path("ssti/", ssti_demo, name="ssti"),
+    path("pickle/", pickle_demo, name="pickle"),
 ]
 
 

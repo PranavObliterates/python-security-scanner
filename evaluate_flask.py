@@ -2,7 +2,7 @@
 Evaluation Framework for the Python Security Scanner
 
 Measures accuracy, precision, recall, F1 score and prints a confusion matrix.
-Run with: python evaluate.py
+Run with: python evaluate_flask.py
 
 How it works:
   1. Define test cases: code snippets labeled as vulnerable or safe (SAST)
@@ -17,6 +17,8 @@ from markupsafe import escape
 from security_scanner.analyzers.sql_injection import SQLInjectionAnalyzer  # type: ignore
 from security_scanner.analyzers.xss import XSSAnalyzer  # type: ignore
 from security_scanner.analyzers.secrets import SecretsAnalyzer  # type: ignore
+from security_scanner.analyzers.ssti import SSTIAnalyzer  # type: ignore
+from security_scanner.analyzers.deserialization import DeserializationAnalyzer  # type: ignore
 from security_scanner.dynamic.payload_tester import run_dast_tests  # type: ignore
 from security_scanner.core.route_discovery import discover_flask_routes  # type: ignore
 from security_scanner.models.finding import VulnerabilityType  # type: ignore
@@ -242,6 +244,48 @@ api_key = ""
         ''',
         "secrets", False
     ),
+
+    # ══════════════════════════════════════════════════════════════
+    # SSTI — TRUE POSITIVES / NEGATIVES
+    # ══════════════════════════════════════════════════════════════
+    (
+        "SSTI: render_template_string with f-string",
+        '''
+tmpl = f"Hello {request.args.get('name')}"
+return render_template_string(tmpl)
+        ''',
+        "ssti", True
+    ),
+    (
+        "SSTI Safe: static string",
+        '''
+tmpl = "Hello User"
+return render_template_string(tmpl)
+        ''',
+        "ssti", False
+    ),
+
+    # ══════════════════════════════════════════════════════════════
+    # DESERIALIZATION — TRUE POSITIVES / NEGATIVES
+    # ══════════════════════════════════════════════════════════════
+    (
+        "Deserialization: pickle.loads",
+        '''
+import pickle
+data = request.args.get("data")
+obj = pickle.loads(data)
+        ''',
+        "deserialization", True
+    ),
+    (
+        "Deserialization Safe: json.loads",
+        '''
+import json
+data = request.args.get("data")
+obj = json.loads(data)
+        ''',
+        "deserialization", False
+    ),
 ]
 
 
@@ -302,6 +346,24 @@ def _build_dast_vulnerable_app():
         conn.close()
         return "OK" if result else "Failed"
 
+    @app.route("/ssti")
+    def ssti_demo():
+        tmpl = request.args.get("tmpl", "Hello")
+        return render_template_string(tmpl)
+
+    @app.route("/pickle")
+    def pickle_demo():
+        data = request.args.get("data", "")
+        if data:
+            try:
+                import pickle
+                import base64
+                obj = pickle.loads(base64.b64decode(data))
+                return str(obj)
+            except Exception as e:
+                return str(e), 500
+        return "No object"
+
     return app
 
 
@@ -341,6 +403,10 @@ DAST_TEST_CASES = [
      _build_dast_vulnerable_app, VulnerabilityType.SQL_INJECTION, True),
     ("DAST XSS: detects reflected XSS in /search",
      _build_dast_vulnerable_app, VulnerabilityType.XSS, True),
+    ("DAST SSTI: detects template injection in /ssti",
+     _build_dast_vulnerable_app, VulnerabilityType.SSTI, True),
+    ("DAST Deserialization: detects unsafe deserialize in /pickle",
+     _build_dast_vulnerable_app, VulnerabilityType.INSECURE_DESERIALIZATION, True),
     ("DAST Safe: no SQLi in parameterized /user",
      _build_dast_safe_app, VulnerabilityType.SQL_INJECTION, False),
     ("DAST Safe: no XSS in escaped /search",
@@ -356,6 +422,10 @@ def run_analyzer(source_code: str, vuln_type: str):
         analyzer = XSSAnalyzer("/test", "test.py", source_code)
     elif vuln_type == "secrets":
         analyzer = SecretsAnalyzer("/test", "test.py", source_code)
+    elif vuln_type == "ssti":
+        analyzer = SSTIAnalyzer("/test", "test.py", source_code)
+    elif vuln_type == "deserialization":
+        analyzer = DeserializationAnalyzer("/test", "test.py", source_code)
     else:
         return []
     return analyzer.analyze()

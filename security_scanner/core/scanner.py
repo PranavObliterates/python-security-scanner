@@ -7,6 +7,8 @@ from .route_discovery import discover_flask_routes, discover_django_routes
 from ..analyzers.sql_injection import SQLInjectionAnalyzer
 from ..analyzers.xss import XSSAnalyzer
 from ..analyzers.secrets import SecretsAnalyzer
+from ..analyzers.ssti import SSTIAnalyzer
+from ..analyzers.deserialization import DeserializationAnalyzer
 from ..analyzers.config import check_flask_config, check_django_config
 from ..dynamic.payload_tester import run_dast_tests, run_django_dast_tests
 from ..dynamic.response_analyzer import check_security_headers, check_cookie_security
@@ -55,6 +57,8 @@ def scan_app(app, dynamic: bool = True, framework: str = "auto") -> ScanResult:
                 SQLInjectionAnalyzer(route.path, route.file_path or "unknown", route.source_code),
                 XSSAnalyzer(route.path, route.file_path or "unknown", route.source_code),
                 SecretsAnalyzer(route.path, route.file_path or "unknown", route.source_code),
+                SSTIAnalyzer(route.path, route.file_path or "unknown", route.source_code),
+                DeserializationAnalyzer(route.path, route.file_path or "unknown", route.source_code),
             ]
             for analyzer in analyzers:
                 result.findings.extend(analyzer.analyze())

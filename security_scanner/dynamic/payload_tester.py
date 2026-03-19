@@ -56,6 +56,14 @@ def run_dast_tests(app, routes) -> List[Finding]:
         xss_findings = _test_xss(client, clean_path, methods, param_names)
         findings.extend(xss_findings)
 
+        # Test SSTI
+        ssti_findings = _test_ssti(client, clean_path, methods, param_names, is_django=False)
+        findings.extend(ssti_findings)
+
+        # Test Deserialization
+        deser_findings = _test_deserialization(client, clean_path, methods, param_names, is_django=False)
+        findings.extend(deser_findings)
+
     return findings
 
 
@@ -198,6 +206,14 @@ def run_django_dast_tests(routes) -> List[Finding]:
         xss_findings = _test_xss_django(client, clean_path, methods, param_names)
         findings.extend(xss_findings)
 
+        # Test SSTI
+        ssti_findings = _test_ssti(client, clean_path, methods, param_names, is_django=True)
+        findings.extend(ssti_findings)
+
+        # Test Deserialization
+        deser_findings = _test_deserialization(client, clean_path, methods, param_names, is_django=True)
+        findings.extend(deser_findings)
+
     return findings
 
 
@@ -311,3 +327,66 @@ def _test_xss_django(client, path: str, methods: List[str], param_names: List[st
 
     return findings
 
+
+def _test_ssti(client, path: str, methods: List[str], param_names: List[str], is_django: bool = False) -> List[Finding]:
+    """Test an endpoint for SSTI."""
+    findings = []
+    ssti_payloads = ["{{ 7 * 7 }}", "${7 * 7}", "{{ 7|add:7 }}"]
+    
+    for param in param_names:
+        for payload in ssti_payloads:
+            try:
+                if "GET" in methods:
+                    response = client.get(f"{path}?{param}={payload}")
+                    body = response.content.decode("utf-8", errors="ignore") if is_django else response.data.decode("utf-8", errors="ignore")
+                    
+                    if "49" in body or "14" in body:
+                        findings.append(Finding(
+                            vuln_type=VulnerabilityType.SSTI,
+                            severity=Severity.CRITICAL,
+                            endpoint=path,
+                            file="(dynamic test)",
+                            line=0,
+                            code_snippet=f"GET {path}?{param}={payload}",
+                            explanation=f"SSTI payload '{payload}' sent as parameter '{param}' was evaluated to '49', confirming Server-Side Template Injection.",
+                            fix_recommendation="Do not dynamically evaluate user input as templates.",
+                            fix_before="",
+                            fix_after="",
+                            reference="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Template_Injection_Prevention_Cheat_Sheet.html",
+                            source="DAST",
+                            confidence="HIGH",
+                        ))
+                        break
+            except Exception:
+                pass
+    return findings
+
+
+def _test_deserialization(client, path: str, methods: List[str], param_names: List[str], is_django: bool = False) -> List[Finding]:
+    """Test an endpoint for Insecure Deserialization."""
+    findings = []
+    deser_payload = "gASVJAAAAAAAAACMCGJ1aWx0aW5zlIwEZXZhbJSTlIwKcHJpbnQoJzEnKZSFlFKULg=="
+    
+    for param in param_names:
+        try:
+            if "GET" in methods:
+                response = client.get(f"{path}?{param}={deser_payload}")
+                if response.status_code == 500:
+                    findings.append(Finding(
+                        vuln_type=VulnerabilityType.INSECURE_DESERIALIZATION,
+                        severity=Severity.CRITICAL,
+                        endpoint=path,
+                        file="(dynamic test)",
+                        line=0,
+                        code_snippet=f"GET {path}?{param}=<Base64_Pickle>",
+                        explanation=f"Sending a serialized payload as parameter '{param}' caused a 500 error, indicating the server might be insecurely deserializing data.",
+                        fix_recommendation="Do not use unsafe deserialization formats like pickle.",
+                        fix_before="pickle.loads(data)",
+                        fix_after="json.loads(data)",
+                        reference="https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html",
+                        source="DAST",
+                        confidence="MEDIUM",
+                    ))
+        except Exception:
+            pass
+    return findings

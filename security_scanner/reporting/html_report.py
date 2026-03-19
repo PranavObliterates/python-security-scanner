@@ -40,7 +40,7 @@ def generate_html_report(result: ScanResult) -> str:
             ref_html = f'<p>📖 <a href="{finding.reference}" target="_blank">OWASP Reference</a></p>'
 
         findings_html += f"""
-        <div style="border:1px solid #e0e0e0;border-left:4px solid {color};
+        <div class="finding {finding.severity.value.lower()}" style="border:1px solid #e0e0e0;border-left:4px solid {color};
                     border-radius:8px;padding:16px;margin:12px 0;
                     background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
             <div style="display:flex;align-items:center;margin-bottom:8px;">
@@ -136,22 +136,40 @@ def generate_html_report(result: ScanResult) -> str:
         </div>
 
         <div class="summary-bar">
-            <span class="summary-badge" style="background:#dc3545;">
+            <button id="btn-all" class="summary-badge active" style="background:#333;color:#fff;" onclick="filterSeverity('all')">
+                All
+            </button>
+            <button id="btn-critical" class="summary-badge" style="background:#dc3545;" onclick="filterSeverity('critical')">
                 {result.critical_count} Critical
-            </span>
-            <span class="summary-badge" style="background:#fd7e14;">
+            </button>
+            <button id="btn-high" class="summary-badge" style="background:#fd7e14;" onclick="filterSeverity('high')">
                 {result.high_count} High
-            </span>
-            <span class="summary-badge" style="background:#ffc107;color:#333;">
+            </button>
+            <button id="btn-medium" class="summary-badge" style="background:#ffc107;color:#333;" onclick="filterSeverity('medium')">
                 {result.medium_count} Medium
-            </span>
-            <span class="summary-badge" style="background:#17a2b8;">
+            </button>
+            <button id="btn-low" class="summary-badge" style="background:#17a2b8;" onclick="filterSeverity('low')">
                 {result.low_count} Low
-            </span>
+            </button>
         </div>
 
         {findings_html if findings_html else '<p style="text-align:center;padding:40px;color:#28a745;font-size:1.2em;">✅ No security issues found!</p>'}
     </div>
+    <script>
+        function filterSeverity(sev) {{
+            document.querySelectorAll('.summary-badge').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + sev).classList.add('active');
+            
+            const findings = document.querySelectorAll('.finding');
+            findings.forEach(f => {{
+                if (sev === 'all' || f.classList.contains(sev)) {{
+                    f.style.display = 'block';
+                }} else {{
+                    f.style.display = 'none';
+                }}
+            }});
+        }}
+    </script>
 </body>
 </html>"""
     return html

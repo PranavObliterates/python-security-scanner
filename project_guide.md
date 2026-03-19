@@ -52,10 +52,10 @@ python_security_scanner_library_project/
 │   ├── init_db.py
 │   └── templates/
 │
-├── run_scan.py                ← Scan the built-in example Flask app
+├── run_flask_scan.py                ← Scan the built-in example Flask app
 ├── run_django_scan.py         ← Scan the built-in example Django app
-├── scan_my_app.py             ← Scan YOUR vuln-flask app
-├── evaluate.py                ← Measure scanner accuracy (Flask)
+├── scan_my_flask_app.py             ← Scan YOUR vuln-flask app
+├── evaluate_flask.py                ← Measure scanner accuracy (Flask)
 ├── evaluate_django.py         ← Measure scanner accuracy (Django)
 ├── run_test_suite.py          ← Run all pytest tests
 ├── setup_test_db.py           ← Create test SQLite database
@@ -148,10 +148,10 @@ These are **standalone scripts** you run from the terminal.
 
 | File | Command | What it does |
 |------|---------|-------------|
-| **[run_scan.py](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/run_scan.py)** | `python run_scan.py` | Scans the built-in [vulnerable_flask_app.py](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/examples/vulnerable_flask_app.py) and generates console + JSON + HTML reports. |
+| **[run_flask_scan.py](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/run_flask_scan.py)** | `python run_flask_scan.py` | Scans the built-in [vulnerable_flask_app.py](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/examples/vulnerable_flask_app.py) and generates console + JSON + HTML reports. |
 | **[run_django_scan.py](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/run_django_scan.py)** | `python run_django_scan.py` | Same but for the Django example app. |
-| **[scan_my_app.py](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/scan_my_app.py)** | `python scan_my_app.py` | Scans **YOUR** [vuln-flask/app.py](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/vuln-flask/app.py) and generates reports. |
-| **[evaluate.py](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/evaluate.py)** | `python evaluate.py` | Measures scanner **accuracy** against the Flask examples — calculates precision, recall, F1 score, confusion matrix. |
+| **[scan_my_flask_app.py](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/scan_my_flask_app.py)** | `python scan_my_flask_app.py` | Scans **YOUR** [vuln-flask/app.py](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/vuln-flask/app.py) and generates reports. |
+| **[evaluate_flask.py](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/evaluate_flask.py)** | `python evaluate_flask.py` | Measures scanner **accuracy** against the Flask examples — calculates precision, recall, F1 score, confusion matrix. |
 | **[evaluate_django.py](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/evaluate_django.py)** | `python evaluate_django.py` | Same accuracy evaluation but for Django. |
 | **[run_test_suite.py](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/run_test_suite.py)** | `python run_test_suite.py` | Runs all pytest tests and prints a summary. |
 | **[setup_test_db.py](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/setup_test_db.py)** | `python setup_test_db.py` | Creates a [test.db](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/test.db) SQLite database with sample users table (needed for DAST tests). |
@@ -162,7 +162,7 @@ These are **standalone scripts** you run from the terminal.
 
 | File | Purpose |
 |------|---------|
-| **[app.py](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/scan_my_app.py)** | Your intentionally vulnerable Flask app with SQL injection, XSS, weak secrets, and debug mode. |
+| **[app.py](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/scan_my_flask_app.py)** | Your intentionally vulnerable Flask app with SQL injection, XSS, weak secrets, and debug mode. |
 | **[init_db.py](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/vuln-flask/init_db.py)** | Creates the [vuln.db](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/vuln.db) SQLite database for your app. |
 | **`templates/`** | HTML templates (login, dashboard, search, comments pages). |
 
@@ -183,7 +183,7 @@ These are **standalone scripts** you run from the terminal.
 
 ```mermaid
 flowchart LR
-    A["Your Flask App\n(vuln-flask/app.py)"] --> B["scan_my_app.py"]
+    A["Your Flask App\n(vuln-flask/app.py)"] --> B["scan_my_flask_app.py"]
     B --> C["security_scanner/\ncore/scanner.py"]
     C --> D["route_discovery.py\n(finds all endpoints)"]
     C --> E["SAST Analyzers\n(read source code)"]
@@ -193,4 +193,4 @@ flowchart LR
     G --> H["Reports\n(console / JSON / HTML)"]
 ```
 
-> **In short:** [scan_my_app.py](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/scan_my_app.py) imports your Flask app → passes it to `scan_app()` → the scanner discovers routes, runs SAST + DAST → collects findings → generates reports.
+> **In short:** [scan_my_flask_app.py](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/scan_my_flask_app.py) imports your Flask app → passes it to `scan_app()` → the scanner discovers routes, runs SAST + DAST → collects findings → generates reports.
