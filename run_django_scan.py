@@ -21,8 +21,6 @@ def main():
     save_json_report(result, "django_scan_report.json")
     save_html_report(result, "django_scan_report.html")
 
-    print(f"\n   [*] JSON report saved to: django_scan_report.json")
-    print(f"   [*] HTML report saved to: django_scan_report.html")
     print(f"\n   Done. {len(result.findings)} issues found in {result.scan_duration_seconds:.3f}s")
 
 

@@ -1,8 +1,8 @@
 {
-  "scan_date": "2026-03-19 16:13:40",
+  "scan_date": "2026-03-19 19:12:05",
   "app_name": "django.core.handlers.wsgi",
   "routes_scanned": 7,
-  "scan_duration_seconds": 4.797,
+  "scan_duration_seconds": 1.216,
   "summary": {
     "total_issues": 19,
     "critical": 10,
@@ -90,7 +90,7 @@
       "line": 6,
       "code": "obj = pickle.loads(base64.b64decode(data))",
       "explanation": "Usage of pickle.loads() detected. This function is inherently unsafe and can execute arbitrary code during deserialization.",
-      "fix": "Use safer serialization formats like JSON (json.loads()) instead of pickle for unstrusted data.",
+      "fix": "Use safer serialization formats like JSON (json.loads()) instead of pickle for untrusted data.",
       "fix_before": "pickle.loads(user_data)",
       "fix_after": "json.loads(user_data)",
       "reference": "https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html"

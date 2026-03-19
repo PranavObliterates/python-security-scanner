@@ -1,8 +1,8 @@
 {
-  "scan_date": "2026-03-19 16:13:29",
+  "scan_date": "2026-03-19 19:12:15",
   "app_name": "examples.vulnerable_flask_app",
   "routes_scanned": 9,
-  "scan_duration_seconds": 1.107,
+  "scan_duration_seconds": 1.198,
   "summary": {
     "total_issues": 29,
     "critical": 21,
@@ -160,7 +160,7 @@
       "line": 6,
       "code": "obj = pickle.loads(base64.b64decode(data))",
       "explanation": "Usage of pickle.loads() detected. This function is inherently unsafe and can execute arbitrary code during deserialization.",
-      "fix": "Use safer serialization formats like JSON (json.loads()) instead of pickle for unstrusted data.",
+      "fix": "Use safer serialization formats like JSON (json.loads()) instead of pickle for untrusted data.",
       "fix_before": "pickle.loads(user_data)",
       "fix_after": "json.loads(user_data)",
       "reference": "https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html"

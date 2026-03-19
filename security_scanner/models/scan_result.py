@@ -32,8 +32,11 @@ class ScanResult:
         return self.critical_count > 0
 
     def summary(self) -> str:
-        counts = {}
-        for f in self.findings:
-            counts[f.severity.value] = counts.get(f.severity.value, 0) + 1
-        parts = [f"{count} {sev}" for sev, count in counts.items()]
+        # Use a fixed order for summary display
+        severity_order = [Severity.CRITICAL, Severity.HIGH, Severity.MEDIUM, Severity.LOW, Severity.INFO]
+        parts = []
+        for sev in severity_order:
+            count = sum(1 for f in self.findings if f.severity == sev)
+            if count > 0:
+                parts.append(f"{count} {sev.value}")
         return " | ".join(parts) if parts else "No issues found"
