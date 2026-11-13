@@ -181,3 +181,29 @@ class TestHTMLReport:
         result = _make_sample_result()
         html = generate_html_report(result)
         assert "owasp.org" in html
+
+
+class TestPDFReport:
+
+    def test_generates_pdf_report(self, tmp_path):
+        """PDF report should generate valid PDF file without error."""
+        from security_scanner.reporting.pdf_report import save_pdf_report
+        result = _make_sample_result()
+        out_file = str(tmp_path / "test_report.pdf")
+        saved = save_pdf_report(result, out_file, prompt_for_key=False)
+        assert saved == out_file
+        import os
+        assert os.path.exists(out_file)
+        assert os.path.getsize(out_file) > 1000
+
+    def test_generates_empty_pdf_report(self, tmp_path):
+        """PDF report should generate cleanly for safe apps with no findings."""
+        from security_scanner.reporting.pdf_report import save_pdf_report
+        result = _make_empty_result()
+        out_file = str(tmp_path / "safe_report.pdf")
+        saved = save_pdf_report(result, out_file, prompt_for_key=False)
+        assert saved == out_file
+        import os
+        assert os.path.exists(out_file)
+        assert os.path.getsize(out_file) > 1000
+

@@ -12,6 +12,13 @@ SECRET_VAR_PATTERNS = re.compile(
     re.IGNORECASE,
 )
 
+NON_SECRET_VAR_SUFFIXES = (
+    "_description", "_desc", "_prompt", "_help", "_hint",
+    "_placeholder", "_msg", "_message", "_error", "_rule",
+    "_regex", "_pattern", "_policy", "_len", "_length",
+    "_field", "_label", "_type", "_name", "_format",
+)
+
 # Common weak/placeholder values
 WEAK_VALUES = {
     "password", "password123", "123456", "admin", "test", "secret",
@@ -76,12 +83,18 @@ class _SecretsVisitor(ast.NodeVisitor):
 
             for target in node.targets:
                 var_name = self.analyzer._extract_var_name(target)
-                if var_name and SECRET_VAR_PATTERNS.search(var_name):
-                    self.analyzer._flag(
-                        line=node.lineno,
-                        code=self.analyzer._get_line_text(node.lineno),
-                        var_name=var_name,
-                        value=value,
-                    )
+                if not var_name or not SECRET_VAR_PATTERNS.search(var_name):
+                    continue
+                var_lower = var_name.lower()
+                if any(var_lower.endswith(sfx) for sfx in NON_SECRET_VAR_SUFFIXES):
+                    continue
+                if len(value.split()) >= 4 or any(p in value.lower() for p in ("should be", "must be", "please enter", "characters")):
+                    continue
+                self.analyzer._flag(
+                    line=node.lineno,
+                    code=self.analyzer._get_line_text(node.lineno),
+                    var_name=var_name,
+                    value=value,
+                )
 
         self.generic_visit(node)

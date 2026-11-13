@@ -5,7 +5,7 @@ from ..models.finding import Finding, Severity, VulnerabilityType
 WEAK_SECRETS = [
     "secret", "password", "password123", "123456", "changeme",
     "default", "admin", "test", "debug", "development",
-    "super_secret", "mysecret", "flask-secret",
+    "super_secret", "mysecret", "flask-secret", "totally_not_secret",
 ]
 
 
@@ -156,7 +156,13 @@ def check_django_config(settings=None) -> List[Finding]:
     secret_key = getattr(settings, "SECRET_KEY", "")
     if secret_key:
         if isinstance(secret_key, str):
-            if secret_key.lower() in WEAK_SECRETS or len(secret_key) < 20:
+            is_weak = (
+                secret_key.lower() in WEAK_SECRETS
+                or len(secret_key) < 25
+                or secret_key.lower().startswith(("django-insecure", "test-", "dev-", "secret-"))
+                or any(w in secret_key.lower() for w in ("password", "dummy", "changeme"))
+            )
+            if is_weak:
                 findings.append(Finding(
                     vuln_type=VulnerabilityType.HARDCODED_SECRET,
                     severity=Severity.HIGH,

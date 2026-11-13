@@ -9,6 +9,11 @@ from ..analyzers.xss import XSSAnalyzer
 from ..analyzers.secrets import SecretsAnalyzer
 from ..analyzers.ssti import SSTIAnalyzer
 from ..analyzers.deserialization import DeserializationAnalyzer
+from ..analyzers.command_injection import CommandInjectionAnalyzer
+from ..analyzers.path_traversal import PathTraversalAnalyzer
+from ..analyzers.ssrf import SSRFAnalyzer
+from ..analyzers.weak_crypto import WeakCryptoAnalyzer
+from ..analyzers.open_redirect import OpenRedirectAnalyzer
 from ..analyzers.config import check_flask_config, check_django_config
 from ..dynamic.payload_tester import run_dast_tests, run_django_dast_tests
 from ..dynamic.response_analyzer import check_security_headers, check_cookie_security
@@ -59,6 +64,11 @@ def scan_app(app, dynamic: bool = True, framework: str = "auto") -> ScanResult:
                 SecretsAnalyzer(route.path, route.file_path or "unknown", route.source_code),
                 SSTIAnalyzer(route.path, route.file_path or "unknown", route.source_code),
                 DeserializationAnalyzer(route.path, route.file_path or "unknown", route.source_code),
+                CommandInjectionAnalyzer(route.path, route.file_path or "unknown", route.source_code),
+                PathTraversalAnalyzer(route.path, route.file_path or "unknown", route.source_code),
+                SSRFAnalyzer(route.path, route.file_path or "unknown", route.source_code),
+                WeakCryptoAnalyzer(route.path, route.file_path or "unknown", route.source_code),
+                OpenRedirectAnalyzer(route.path, route.file_path or "unknown", route.source_code),
             ]
             for analyzer in analyzers:
                 result.findings.extend(analyzer.analyze())

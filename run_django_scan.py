@@ -9,6 +9,7 @@ from security_scanner import scan_app
 from security_scanner.reporting.console import print_report
 from security_scanner.reporting.json_report import save_json_report
 from security_scanner.reporting.html_report import save_html_report
+from security_scanner.reporting.pdf_report import save_pdf_report
 
 
 def main():
@@ -20,6 +21,8 @@ def main():
     print_report(result)
     save_json_report(result, "django_scan_report.json")
     save_html_report(result, "django_scan_report.html")
+    save_pdf_report(result, "django_scan_report.pdf", prompt_for_key=False)
+    print("   [*] PDF report saved to: django_scan_report.pdf")
 
     print(f"\n   Done. {len(result.findings)} issues found in {result.scan_duration_seconds:.3f}s")
 

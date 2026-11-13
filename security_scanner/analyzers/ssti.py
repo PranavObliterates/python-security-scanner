@@ -15,7 +15,21 @@ class SSTIAnalyzer(BaseAnalyzer):
 class _SSTIVisitor(ast.NodeVisitor):
     def __init__(self, analyzer: SSTIAnalyzer):
         self.analyzer = analyzer
-        
+        self.static_vars = set()
+        self.dynamic_vars = set()
+
+    def visit_Assign(self, node: ast.Assign) -> None:
+        """Track variable assignments to distinguish static constants from dynamic expressions."""
+        is_constant = isinstance(node.value, ast.Constant) and isinstance(node.value.value, str)
+        for target in node.targets:
+            var_name = self.analyzer._extract_var_name(target)
+            if var_name:
+                if is_constant:
+                    self.static_vars.add(var_name)
+                else:
+                    self.dynamic_vars.add(var_name)
+        self.generic_visit(node)
+
     def visit_Call(self, node: ast.Call) -> None:
         """Flag usage of render_template_string when the argument is dynamic."""
         if isinstance(node.func, ast.Name):
@@ -26,19 +40,30 @@ class _SSTIVisitor(ast.NodeVisitor):
             func_name = ""
 
         if func_name in ("render_template_string", "Template"):
-            # Check if the first argument is dynamic (JoinedStr = f-string, Call = .format, BinOp = +)
-            if node.args and isinstance(node.args[0], (ast.JoinedStr, ast.Call, ast.BinOp, ast.Name)):
-                self.analyzer.findings.append(Finding(
-                    vuln_type=VulnerabilityType.SSTI,
-                    severity=Severity.CRITICAL,
-                    endpoint=self.analyzer.endpoint,
-                    file=self.analyzer.file_path,
-                    line=node.lineno,
-                    code_snippet=self.analyzer._get_line_text(node.lineno),
-                    explanation="Variable appears to come from user input and is interpolated directly into a template string, enabling Server-Side Template Injection.",
-                    fix_recommendation="Use render_template() with a static template file instead of rendering strings dynamically. If you must use strings, ensure input is strictly validated or sandboxed.",
-                    fix_before="render_template_string(f'Hello {user_input}')",
-                    fix_after="render_template('hello.html', name=user_input)",
-                    reference="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Template_Injection_Prevention_Cheat_Sheet.html"
-                ))
+            if node.args:
+                arg = node.args[0]
+                is_dynamic = False
+                if isinstance(arg, (ast.JoinedStr, ast.BinOp, ast.Call)):
+                    is_dynamic = True
+                elif isinstance(arg, ast.Name):
+                    var_name = arg.id
+                    if var_name in self.static_vars and var_name not in self.dynamic_vars:
+                        is_dynamic = False
+                    else:
+                        is_dynamic = True
+
+                if is_dynamic:
+                    self.analyzer.findings.append(Finding(
+                        vuln_type=VulnerabilityType.SSTI,
+                        severity=Severity.CRITICAL,
+                        endpoint=self.analyzer.endpoint,
+                        file=self.analyzer.file_path,
+                        line=node.lineno,
+                        code_snippet=self.analyzer._get_line_text(node.lineno),
+                        explanation="Variable appears to come from user input and is interpolated directly into a template string, enabling Server-Side Template Injection.",
+                        fix_recommendation="Use render_template() with a static template file instead of rendering strings dynamically. If you must use strings, ensure input is strictly validated or sandboxed.",
+                        fix_before="render_template_string(f'Hello {user_input}')",
+                        fix_after="render_template('hello.html', name=user_input)",
+                        reference="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Template_Injection_Prevention_Cheat_Sheet.html"
+                    ))
         self.generic_visit(node)

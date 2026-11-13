@@ -331,16 +331,29 @@ def _test_xss_django(client, path: str, methods: List[str], param_names: List[st
 def _test_ssti(client, path: str, methods: List[str], param_names: List[str], is_django: bool = False) -> List[Finding]:
     """Test an endpoint for SSTI."""
     findings = []
-    ssti_payloads = ["{{ 7 * 7 }}", "${7 * 7}", "{{ 7|add:7 }}"]
-    
+    ssti_payloads = [
+        ("{{ 7 * 7 }}", "49"),
+        ("${7 * 7}", "49"),
+        ("{{ 7|add:7 }}", "14"),
+    ]
+
+    # Baseline check to eliminate false positives on static numbers in HTML/CSS
+    baseline_body = ""
+    try:
+        if "GET" in methods:
+            base_resp = client.get(path)
+            baseline_body = base_resp.content.decode("utf-8", errors="ignore") if is_django else base_resp.data.decode("utf-8", errors="ignore")
+    except Exception:
+        pass
+
     for param in param_names:
-        for payload in ssti_payloads:
+        for payload, expected in ssti_payloads:
             try:
                 if "GET" in methods:
                     response = client.get(f"{path}?{param}={payload}")
                     body = response.content.decode("utf-8", errors="ignore") if is_django else response.data.decode("utf-8", errors="ignore")
-                    
-                    if "49" in body or "14" in body:
+
+                    if expected in body and (expected not in baseline_body or body.count(expected) > baseline_body.count(expected)):
                         findings.append(Finding(
                             vuln_type=VulnerabilityType.SSTI,
                             severity=Severity.CRITICAL,
@@ -348,7 +361,7 @@ def _test_ssti(client, path: str, methods: List[str], param_names: List[str], is
                             file="(dynamic test)",
                             line=0,
                             code_snippet=f"GET {path}?{param}={payload}",
-                            explanation=f"SSTI payload '{payload}' sent as parameter '{param}' was evaluated to '49', confirming Server-Side Template Injection.",
+                            explanation=f"SSTI payload '{payload}' sent as parameter '{param}' was evaluated to '{expected}', confirming Server-Side Template Injection.",
                             fix_recommendation="Do not dynamically evaluate user input as templates.",
                             fix_before="",
                             fix_after="",

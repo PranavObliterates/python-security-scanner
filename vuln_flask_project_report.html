@@ -60,9 +60,9 @@
             <p><strong>Application:</strong> vuln_app</p>
             <div class="stats">
                 <div class="stat">📍 Routes: 8</div>
-                <div class="stat">🔍 Issues: 25</div>
-                <div class="stat">⏱️ Time: 0.970s</div>
-                <div class="stat">📅 2026-03-19 23:53</div>
+                <div class="stat">🔍 Issues: 12</div>
+                <div class="stat">⏱️ Time: 0.961s</div>
+                <div class="stat">📅 2026-11-13 16:57</div>
             </div>
         </div>
 
@@ -71,10 +71,10 @@
                 All
             </button>
             <button id="btn-critical" class="summary-badge" style="background:#dc3545;" onclick="filterSeverity('critical')">
-                20 Critical
+                6 Critical
             </button>
             <button id="btn-high" class="summary-badge" style="background:#fd7e14;" onclick="filterSeverity('high')">
-                1 High
+                2 High
             </button>
             <button id="btn-medium" class="summary-badge" style="background:#ffc107;color:#333;" onclick="filterSeverity('medium')">
                 3 Medium
@@ -100,7 +100,7 @@
             <p style="color:#666;margin:4px 0;">
                 📍 <strong>/login</strong>
                  (line 9)
-                → C:\Users\prana\Downloads\python_security_scanner_library_project\vuln-flask\app.py
+                → D:\pysecure\vuln-flask\app.py
             </p>
             <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
                         font-family:monospace;font-size:0.9em;margin:8px 0;">
@@ -134,7 +134,7 @@
             <p style="color:#666;margin:4px 0;">
                 📍 <strong>/search</strong>
                  (line 8)
-                → C:\Users\prana\Downloads\python_security_scanner_library_project\vuln-flask\app.py
+                → D:\pysecure\vuln-flask\app.py
             </p>
             <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
                         font-family:monospace;font-size:0.9em;margin:8px 0;">
@@ -168,7 +168,7 @@
             <p style="color:#666;margin:4px 0;">
                 📍 <strong>/ssti</strong>
                  (line 4)
-                → C:\Users\prana\Downloads\python_security_scanner_library_project\vuln-flask\app.py
+                → D:\pysecure\vuln-flask\app.py
             </p>
             <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
                         font-family:monospace;font-size:0.9em;margin:8px 0;">
@@ -203,7 +203,7 @@ return f&quot;&lt;h1&gt;{escape(tmpl)}&lt;/h1&gt;&quot;</code>
             <p style="color:#666;margin:4px 0;">
                 📍 <strong>/ssti</strong>
                  (line 4)
-                → C:\Users\prana\Downloads\python_security_scanner_library_project\vuln-flask\app.py
+                → D:\pysecure\vuln-flask\app.py
             </p>
             <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
                         font-family:monospace;font-size:0.9em;margin:8px 0;">
@@ -237,7 +237,7 @@ return f&quot;&lt;h1&gt;{escape(tmpl)}&lt;/h1&gt;&quot;</code>
             <p style="color:#666;margin:4px 0;">
                 📍 <strong>/pickle</strong>
                  (line 6)
-                → C:\Users\prana\Downloads\python_security_scanner_library_project\vuln-flask\app.py
+                → D:\pysecure\vuln-flask\app.py
             </p>
             <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
                         font-family:monospace;font-size:0.9em;margin:8px 0;">
@@ -266,6 +266,41 @@ return f&quot;&lt;h1&gt;{escape(tmpl)}&lt;/h1&gt;&quot;</code>
                 </span>
                 <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
                 <span style="margin-left:auto;color:#888;">#6</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">HARDCODED_SECRET</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>(global config)</strong>
+                
+                → app configuration
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                app.secret_key = &quot;totally_not_secret&quot;
+            </div>
+            <p><strong>⚠️ Why:</strong> SECRET_KEY is weak or easily guessable (&#x27;totally_not_secret&#x27;). Flask uses this key to sign session cookies. An attacker who knows this key can forge sessions and impersonate any user, including admins.</p>
+            <p><strong>✅ Fix:</strong> Use a long random secret key from environment variables.</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>app.secret_key = &quot;totally_not_secret&quot;</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>import os
+app.secret_key = os.environ.get(&quot;SECRET_KEY&quot;)</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://flask.palletsprojects.com/en/stable/config/#SECRET_KEY" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div class="finding high" style="border:1px solid #e0e0e0;border-left:4px solid #fd7e14;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#fd7e14;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    HIGH
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
+                <span style="margin-left:auto;color:#888;">#7</span>
             </div>
             <h3 style="margin:8px 0 4px 0;color:#333;">CSRF_MISSING</h3>
             <p style="color:#666;margin:4px 0;">
@@ -302,189 +337,7 @@ CSRFProtect(app)</code>
                     CRITICAL
                 </span>
                 <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#7</span>
-            </div>
-            <h3 style="margin:8px 0 4px 0;color:#333;">SSTI</h3>
-            <p style="color:#666;margin:4px 0;">
-                📍 <strong>/login</strong>
-                
-                → (dynamic test)
-            </p>
-            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
-                        font-family:monospace;font-size:0.9em;margin:8px 0;">
-                GET /login?id={{ 7 * 7 }}
-            </div>
-            <p><strong>⚠️ Why:</strong> SSTI payload &#x27;{{ 7 * 7 }}&#x27; sent as parameter &#x27;id&#x27; was evaluated to &#x27;49&#x27;, confirming Server-Side Template Injection.</p>
-            <p><strong>✅ Fix:</strong> Do not dynamically evaluate user input as templates.</p>
-            
-            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Template_Injection_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
-        </div>
-        <div class="finding critical" style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
-                    border-radius:8px;padding:16px;margin:12px 0;
-                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            <div style="display:flex;align-items:center;margin-bottom:8px;">
-                <span style="background:#dc3545;color:#fff;padding:4px 12px;
-                             border-radius:4px;font-weight:bold;font-size:0.85em;">
-                    CRITICAL
-                </span>
-                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
                 <span style="margin-left:auto;color:#888;">#8</span>
-            </div>
-            <h3 style="margin:8px 0 4px 0;color:#333;">SSTI</h3>
-            <p style="color:#666;margin:4px 0;">
-                📍 <strong>/login</strong>
-                
-                → (dynamic test)
-            </p>
-            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
-                        font-family:monospace;font-size:0.9em;margin:8px 0;">
-                GET /login?q={{ 7 * 7 }}
-            </div>
-            <p><strong>⚠️ Why:</strong> SSTI payload &#x27;{{ 7 * 7 }}&#x27; sent as parameter &#x27;q&#x27; was evaluated to &#x27;49&#x27;, confirming Server-Side Template Injection.</p>
-            <p><strong>✅ Fix:</strong> Do not dynamically evaluate user input as templates.</p>
-            
-            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Template_Injection_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
-        </div>
-        <div class="finding critical" style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
-                    border-radius:8px;padding:16px;margin:12px 0;
-                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            <div style="display:flex;align-items:center;margin-bottom:8px;">
-                <span style="background:#dc3545;color:#fff;padding:4px 12px;
-                             border-radius:4px;font-weight:bold;font-size:0.85em;">
-                    CRITICAL
-                </span>
-                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#9</span>
-            </div>
-            <h3 style="margin:8px 0 4px 0;color:#333;">SSTI</h3>
-            <p style="color:#666;margin:4px 0;">
-                📍 <strong>/login</strong>
-                
-                → (dynamic test)
-            </p>
-            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
-                        font-family:monospace;font-size:0.9em;margin:8px 0;">
-                GET /login?name={{ 7 * 7 }}
-            </div>
-            <p><strong>⚠️ Why:</strong> SSTI payload &#x27;{{ 7 * 7 }}&#x27; sent as parameter &#x27;name&#x27; was evaluated to &#x27;49&#x27;, confirming Server-Side Template Injection.</p>
-            <p><strong>✅ Fix:</strong> Do not dynamically evaluate user input as templates.</p>
-            
-            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Template_Injection_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
-        </div>
-        <div class="finding critical" style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
-                    border-radius:8px;padding:16px;margin:12px 0;
-                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            <div style="display:flex;align-items:center;margin-bottom:8px;">
-                <span style="background:#dc3545;color:#fff;padding:4px 12px;
-                             border-radius:4px;font-weight:bold;font-size:0.85em;">
-                    CRITICAL
-                </span>
-                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#10</span>
-            </div>
-            <h3 style="margin:8px 0 4px 0;color:#333;">SSTI</h3>
-            <p style="color:#666;margin:4px 0;">
-                📍 <strong>/login</strong>
-                
-                → (dynamic test)
-            </p>
-            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
-                        font-family:monospace;font-size:0.9em;margin:8px 0;">
-                GET /login?search={{ 7 * 7 }}
-            </div>
-            <p><strong>⚠️ Why:</strong> SSTI payload &#x27;{{ 7 * 7 }}&#x27; sent as parameter &#x27;search&#x27; was evaluated to &#x27;49&#x27;, confirming Server-Side Template Injection.</p>
-            <p><strong>✅ Fix:</strong> Do not dynamically evaluate user input as templates.</p>
-            
-            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Template_Injection_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
-        </div>
-        <div class="finding critical" style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
-                    border-radius:8px;padding:16px;margin:12px 0;
-                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            <div style="display:flex;align-items:center;margin-bottom:8px;">
-                <span style="background:#dc3545;color:#fff;padding:4px 12px;
-                             border-radius:4px;font-weight:bold;font-size:0.85em;">
-                    CRITICAL
-                </span>
-                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#11</span>
-            </div>
-            <h3 style="margin:8px 0 4px 0;color:#333;">SSTI</h3>
-            <p style="color:#666;margin:4px 0;">
-                📍 <strong>/login</strong>
-                
-                → (dynamic test)
-            </p>
-            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
-                        font-family:monospace;font-size:0.9em;margin:8px 0;">
-                GET /login?input={{ 7 * 7 }}
-            </div>
-            <p><strong>⚠️ Why:</strong> SSTI payload &#x27;{{ 7 * 7 }}&#x27; sent as parameter &#x27;input&#x27; was evaluated to &#x27;49&#x27;, confirming Server-Side Template Injection.</p>
-            <p><strong>✅ Fix:</strong> Do not dynamically evaluate user input as templates.</p>
-            
-            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Template_Injection_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
-        </div>
-        <div class="finding critical" style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
-                    border-radius:8px;padding:16px;margin:12px 0;
-                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            <div style="display:flex;align-items:center;margin-bottom:8px;">
-                <span style="background:#dc3545;color:#fff;padding:4px 12px;
-                             border-radius:4px;font-weight:bold;font-size:0.85em;">
-                    CRITICAL
-                </span>
-                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#12</span>
-            </div>
-            <h3 style="margin:8px 0 4px 0;color:#333;">SSTI</h3>
-            <p style="color:#666;margin:4px 0;">
-                📍 <strong>/login</strong>
-                
-                → (dynamic test)
-            </p>
-            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
-                        font-family:monospace;font-size:0.9em;margin:8px 0;">
-                GET /login?user={{ 7 * 7 }}
-            </div>
-            <p><strong>⚠️ Why:</strong> SSTI payload &#x27;{{ 7 * 7 }}&#x27; sent as parameter &#x27;user&#x27; was evaluated to &#x27;49&#x27;, confirming Server-Side Template Injection.</p>
-            <p><strong>✅ Fix:</strong> Do not dynamically evaluate user input as templates.</p>
-            
-            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Template_Injection_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
-        </div>
-        <div class="finding critical" style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
-                    border-radius:8px;padding:16px;margin:12px 0;
-                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            <div style="display:flex;align-items:center;margin-bottom:8px;">
-                <span style="background:#dc3545;color:#fff;padding:4px 12px;
-                             border-radius:4px;font-weight:bold;font-size:0.85em;">
-                    CRITICAL
-                </span>
-                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#13</span>
-            </div>
-            <h3 style="margin:8px 0 4px 0;color:#333;">SSTI</h3>
-            <p style="color:#666;margin:4px 0;">
-                📍 <strong>/login</strong>
-                
-                → (dynamic test)
-            </p>
-            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
-                        font-family:monospace;font-size:0.9em;margin:8px 0;">
-                GET /login?query={{ 7 * 7 }}
-            </div>
-            <p><strong>⚠️ Why:</strong> SSTI payload &#x27;{{ 7 * 7 }}&#x27; sent as parameter &#x27;query&#x27; was evaluated to &#x27;49&#x27;, confirming Server-Side Template Injection.</p>
-            <p><strong>✅ Fix:</strong> Do not dynamically evaluate user input as templates.</p>
-            
-            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Template_Injection_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
-        </div>
-        <div class="finding critical" style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
-                    border-radius:8px;padding:16px;margin:12px 0;
-                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            <div style="display:flex;align-items:center;margin-bottom:8px;">
-                <span style="background:#dc3545;color:#fff;padding:4px 12px;
-                             border-radius:4px;font-weight:bold;font-size:0.85em;">
-                    CRITICAL
-                </span>
-                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#14</span>
             </div>
             <h3 style="margin:8px 0 4px 0;color:#333;">XSS</h3>
             <p style="color:#666;margin:4px 0;">
@@ -510,188 +363,6 @@ return f&quot;...{escape(q)}...&quot;</code>
             </div>
             <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
         </div>
-        <div class="finding critical" style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
-                    border-radius:8px;padding:16px;margin:12px 0;
-                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            <div style="display:flex;align-items:center;margin-bottom:8px;">
-                <span style="background:#dc3545;color:#fff;padding:4px 12px;
-                             border-radius:4px;font-weight:bold;font-size:0.85em;">
-                    CRITICAL
-                </span>
-                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#15</span>
-            </div>
-            <h3 style="margin:8px 0 4px 0;color:#333;">SSTI</h3>
-            <p style="color:#666;margin:4px 0;">
-                📍 <strong>/search</strong>
-                
-                → (dynamic test)
-            </p>
-            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
-                        font-family:monospace;font-size:0.9em;margin:8px 0;">
-                GET /search?id={{ 7 * 7 }}
-            </div>
-            <p><strong>⚠️ Why:</strong> SSTI payload &#x27;{{ 7 * 7 }}&#x27; sent as parameter &#x27;id&#x27; was evaluated to &#x27;49&#x27;, confirming Server-Side Template Injection.</p>
-            <p><strong>✅ Fix:</strong> Do not dynamically evaluate user input as templates.</p>
-            
-            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Template_Injection_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
-        </div>
-        <div class="finding critical" style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
-                    border-radius:8px;padding:16px;margin:12px 0;
-                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            <div style="display:flex;align-items:center;margin-bottom:8px;">
-                <span style="background:#dc3545;color:#fff;padding:4px 12px;
-                             border-radius:4px;font-weight:bold;font-size:0.85em;">
-                    CRITICAL
-                </span>
-                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#16</span>
-            </div>
-            <h3 style="margin:8px 0 4px 0;color:#333;">SSTI</h3>
-            <p style="color:#666;margin:4px 0;">
-                📍 <strong>/search</strong>
-                
-                → (dynamic test)
-            </p>
-            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
-                        font-family:monospace;font-size:0.9em;margin:8px 0;">
-                GET /search?q={{ 7 * 7 }}
-            </div>
-            <p><strong>⚠️ Why:</strong> SSTI payload &#x27;{{ 7 * 7 }}&#x27; sent as parameter &#x27;q&#x27; was evaluated to &#x27;49&#x27;, confirming Server-Side Template Injection.</p>
-            <p><strong>✅ Fix:</strong> Do not dynamically evaluate user input as templates.</p>
-            
-            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Template_Injection_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
-        </div>
-        <div class="finding critical" style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
-                    border-radius:8px;padding:16px;margin:12px 0;
-                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            <div style="display:flex;align-items:center;margin-bottom:8px;">
-                <span style="background:#dc3545;color:#fff;padding:4px 12px;
-                             border-radius:4px;font-weight:bold;font-size:0.85em;">
-                    CRITICAL
-                </span>
-                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#17</span>
-            </div>
-            <h3 style="margin:8px 0 4px 0;color:#333;">SSTI</h3>
-            <p style="color:#666;margin:4px 0;">
-                📍 <strong>/search</strong>
-                
-                → (dynamic test)
-            </p>
-            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
-                        font-family:monospace;font-size:0.9em;margin:8px 0;">
-                GET /search?name={{ 7 * 7 }}
-            </div>
-            <p><strong>⚠️ Why:</strong> SSTI payload &#x27;{{ 7 * 7 }}&#x27; sent as parameter &#x27;name&#x27; was evaluated to &#x27;49&#x27;, confirming Server-Side Template Injection.</p>
-            <p><strong>✅ Fix:</strong> Do not dynamically evaluate user input as templates.</p>
-            
-            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Template_Injection_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
-        </div>
-        <div class="finding critical" style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
-                    border-radius:8px;padding:16px;margin:12px 0;
-                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            <div style="display:flex;align-items:center;margin-bottom:8px;">
-                <span style="background:#dc3545;color:#fff;padding:4px 12px;
-                             border-radius:4px;font-weight:bold;font-size:0.85em;">
-                    CRITICAL
-                </span>
-                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#18</span>
-            </div>
-            <h3 style="margin:8px 0 4px 0;color:#333;">SSTI</h3>
-            <p style="color:#666;margin:4px 0;">
-                📍 <strong>/search</strong>
-                
-                → (dynamic test)
-            </p>
-            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
-                        font-family:monospace;font-size:0.9em;margin:8px 0;">
-                GET /search?search={{ 7 * 7 }}
-            </div>
-            <p><strong>⚠️ Why:</strong> SSTI payload &#x27;{{ 7 * 7 }}&#x27; sent as parameter &#x27;search&#x27; was evaluated to &#x27;49&#x27;, confirming Server-Side Template Injection.</p>
-            <p><strong>✅ Fix:</strong> Do not dynamically evaluate user input as templates.</p>
-            
-            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Template_Injection_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
-        </div>
-        <div class="finding critical" style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
-                    border-radius:8px;padding:16px;margin:12px 0;
-                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            <div style="display:flex;align-items:center;margin-bottom:8px;">
-                <span style="background:#dc3545;color:#fff;padding:4px 12px;
-                             border-radius:4px;font-weight:bold;font-size:0.85em;">
-                    CRITICAL
-                </span>
-                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#19</span>
-            </div>
-            <h3 style="margin:8px 0 4px 0;color:#333;">SSTI</h3>
-            <p style="color:#666;margin:4px 0;">
-                📍 <strong>/search</strong>
-                
-                → (dynamic test)
-            </p>
-            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
-                        font-family:monospace;font-size:0.9em;margin:8px 0;">
-                GET /search?input={{ 7 * 7 }}
-            </div>
-            <p><strong>⚠️ Why:</strong> SSTI payload &#x27;{{ 7 * 7 }}&#x27; sent as parameter &#x27;input&#x27; was evaluated to &#x27;49&#x27;, confirming Server-Side Template Injection.</p>
-            <p><strong>✅ Fix:</strong> Do not dynamically evaluate user input as templates.</p>
-            
-            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Template_Injection_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
-        </div>
-        <div class="finding critical" style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
-                    border-radius:8px;padding:16px;margin:12px 0;
-                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            <div style="display:flex;align-items:center;margin-bottom:8px;">
-                <span style="background:#dc3545;color:#fff;padding:4px 12px;
-                             border-radius:4px;font-weight:bold;font-size:0.85em;">
-                    CRITICAL
-                </span>
-                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#20</span>
-            </div>
-            <h3 style="margin:8px 0 4px 0;color:#333;">SSTI</h3>
-            <p style="color:#666;margin:4px 0;">
-                📍 <strong>/search</strong>
-                
-                → (dynamic test)
-            </p>
-            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
-                        font-family:monospace;font-size:0.9em;margin:8px 0;">
-                GET /search?user={{ 7 * 7 }}
-            </div>
-            <p><strong>⚠️ Why:</strong> SSTI payload &#x27;{{ 7 * 7 }}&#x27; sent as parameter &#x27;user&#x27; was evaluated to &#x27;49&#x27;, confirming Server-Side Template Injection.</p>
-            <p><strong>✅ Fix:</strong> Do not dynamically evaluate user input as templates.</p>
-            
-            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Template_Injection_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
-        </div>
-        <div class="finding critical" style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
-                    border-radius:8px;padding:16px;margin:12px 0;
-                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            <div style="display:flex;align-items:center;margin-bottom:8px;">
-                <span style="background:#dc3545;color:#fff;padding:4px 12px;
-                             border-radius:4px;font-weight:bold;font-size:0.85em;">
-                    CRITICAL
-                </span>
-                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#21</span>
-            </div>
-            <h3 style="margin:8px 0 4px 0;color:#333;">SSTI</h3>
-            <p style="color:#666;margin:4px 0;">
-                📍 <strong>/search</strong>
-                
-                → (dynamic test)
-            </p>
-            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
-                        font-family:monospace;font-size:0.9em;margin:8px 0;">
-                GET /search?query={{ 7 * 7 }}
-            </div>
-            <p><strong>⚠️ Why:</strong> SSTI payload &#x27;{{ 7 * 7 }}&#x27; sent as parameter &#x27;query&#x27; was evaluated to &#x27;49&#x27;, confirming Server-Side Template Injection.</p>
-            <p><strong>✅ Fix:</strong> Do not dynamically evaluate user input as templates.</p>
-            
-            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Template_Injection_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
-        </div>
         <div class="finding medium" style="border:1px solid #e0e0e0;border-left:4px solid #ffc107;
                     border-radius:8px;padding:16px;margin:12px 0;
                     background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
@@ -701,7 +372,7 @@ return f&quot;...{escape(q)}...&quot;</code>
                     MEDIUM
                 </span>
                 <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#22</span>
+                <span style="margin-left:auto;color:#888;">#9</span>
             </div>
             <h3 style="margin:8px 0 4px 0;color:#333;">MISSING_SECURITY_HEADER</h3>
             <p style="color:#666;margin:4px 0;">
@@ -735,7 +406,7 @@ return f&quot;...{escape(q)}...&quot;</code>
                     LOW
                 </span>
                 <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#23</span>
+                <span style="margin-left:auto;color:#888;">#10</span>
             </div>
             <h3 style="margin:8px 0 4px 0;color:#333;">MISSING_SECURITY_HEADER</h3>
             <p style="color:#666;margin:4px 0;">
@@ -769,7 +440,7 @@ return f&quot;...{escape(q)}...&quot;</code>
                     MEDIUM
                 </span>
                 <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#24</span>
+                <span style="margin-left:auto;color:#888;">#11</span>
             </div>
             <h3 style="margin:8px 0 4px 0;color:#333;">MISSING_SECURITY_HEADER</h3>
             <p style="color:#666;margin:4px 0;">
@@ -803,7 +474,7 @@ return f&quot;...{escape(q)}...&quot;</code>
                     MEDIUM
                 </span>
                 <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#25</span>
+                <span style="margin-left:auto;color:#888;">#12</span>
             </div>
             <h3 style="margin:8px 0 4px 0;color:#333;">MISSING_SECURITY_HEADER</h3>
             <p style="color:#666;margin:4px 0;">

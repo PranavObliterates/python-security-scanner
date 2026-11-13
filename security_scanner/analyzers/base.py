@@ -43,13 +43,21 @@ class BaseAnalyzer(ABC):
     def _is_user_input_name(self, name: str) -> bool:
         """Check if a variable name likely comes from user input.
 
-        Uses a simple heuristic: looks for assignments like
-        `name = request.args.get(...)` in the source code.
+        Uses flexible regex/patterns to detect assignments like
+        `name = request.args.get(...)` even with irregular spacing.
         """
+        import re
+        if not name:
+            return False
+        if name.startswith("request."):
+            return True
+
+        escaped = re.escape(name)
+        if re.search(rf"\b{escaped}\s*=\s*.*request\.", self.source_code):
+            return True
+
         for pattern in USER_INPUT_SOURCES:
-            # Check if  variable = request.args.get(...)  or similar
-            if f"{name} = {pattern}" in self.source_code or \
-               f"{name} = request." in self.source_code:
+            if re.search(rf"\b{escaped}\s*=\s*.*{re.escape(pattern)}", self.source_code):
                 return True
         return False
 
