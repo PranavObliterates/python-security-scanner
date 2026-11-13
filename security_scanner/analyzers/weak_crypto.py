@@ -62,6 +62,26 @@ class _WeakCryptoVisitor(ast.NodeVisitor):
                         self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), algo)
             elif caller_name.lower() in ("md5", "sha1", "md4", "sha") and attr_lower == "new":
                 self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), caller_name.lower())
+            elif caller_name == "hmac" and attr_lower == "new":
+                algo = ""
+                if len(node.args) >= 3:
+                    arg = node.args[2]
+                    if isinstance(arg, ast.Constant):
+                        algo = str(arg.value).lower()
+                    elif isinstance(arg, ast.Attribute) and arg.attr.lower() in ("md5", "sha1", "sha", "md4"):
+                        algo = arg.attr.lower()
+                    elif isinstance(arg, ast.Name) and arg.id.lower() in ("md5", "sha1", "sha", "md4"):
+                        algo = arg.id.lower()
+                for kw in node.keywords:
+                    if kw.arg in ("digestmod", "name"):
+                        if isinstance(kw.value, ast.Constant):
+                            algo = str(kw.value.value).lower()
+                        elif isinstance(kw.value, ast.Attribute) and kw.value.attr.lower() in ("md5", "sha1", "sha", "md4"):
+                            algo = kw.value.attr.lower()
+                        elif isinstance(kw.value, ast.Name) and kw.value.id.lower() in ("md5", "sha1", "sha", "md4"):
+                            algo = kw.value.id.lower()
+                if algo in ("md5", "sha1", "sha", "md4"):
+                    self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), f"hmac.{algo}")
 
         # Check md5() or sha1() direct call
         elif isinstance(node.func, ast.Name) and node.func.id.lower() in ("md5", "sha1", "sha", "md4"):

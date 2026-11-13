@@ -79,16 +79,27 @@ class _PathTraversalVisitor(ast.NodeVisitor):
                 func_name = f"{node.func.value.id}.{node.func.attr}"
                 is_target = True
 
-        if is_target and node.args:
-            path_arg = node.args[0]
-            is_sanitized = False
-            if isinstance(path_arg, ast.Call):
-                call_func = self.analyzer._extract_var_name(path_arg.func)
-                if "secure_filename" in call_func:
-                    is_sanitized = True
+        if is_target:
+            path_arg = None
+            if node.args:
+                path_arg = node.args[0]
+            else:
+                for kw in node.keywords:
+                    if kw.arg in ("file", "filename", "filepath", "path", "path_or_file"):
+                        path_arg = kw.value
+                        break
+                if not path_arg and node.keywords:
+                    path_arg = node.keywords[0].value
 
-            if not is_sanitized and self.analyzer._is_node_tainted(path_arg, self.tainted_paths):
-                var_name = self.analyzer._extract_var_name(path_arg) or "input"
-                self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), func_name, var_name)
+            if path_arg:
+                is_sanitized = False
+                if isinstance(path_arg, ast.Call):
+                    call_func = self.analyzer._extract_var_name(path_arg.func)
+                    if "secure_filename" in call_func:
+                        is_sanitized = True
+
+                if not is_sanitized and self.analyzer._is_node_tainted(path_arg, self.tainted_paths):
+                    var_name = self.analyzer._extract_var_name(path_arg) or "input"
+                    self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), func_name, var_name)
 
         self.generic_visit(node)

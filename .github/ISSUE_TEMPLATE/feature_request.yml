@@ -1,0 +1,35 @@
+name: Feature Request / New Rule
+description: Suggest a new OWASP Top 10 rule, framework support, or analyzer improvement.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea for a new security check or analyzer? Let us know below!
+  - type: input
+    id: vuln-name
+    attributes:
+      label: Vulnerability Name / OWASP Category
+      placeholder: e.g., A07:2021 Weak JWT Algorithm Detection
+    validations:
+      required: true
+  - type: textarea
+    id: problem-description
+    attributes:
+      label: Vulnerable Pattern
+      description: Explain the code pattern that represents a security risk.
+      placeholder: |
+        jwt.decode(token, key, algorithms=["none"])
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: remediation-pattern
+    attributes:
+      label: Recommended Remediation
+      description: What is the secure code pattern or fix recommendation?
+      placeholder: |
+        jwt.decode(token, key, algorithms=["HS256"])
+      render: python
+    validations:
+      required: true

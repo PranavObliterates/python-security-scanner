@@ -15,6 +15,21 @@ class DeserializationAnalyzer(BaseAnalyzer):
 class _DeserializationVisitor(ast.NodeVisitor):
     def __init__(self, analyzer: DeserializationAnalyzer):
         self.analyzer = analyzer
+        self.pickle_modules = {"pickle", "_pickle", "cPickle"}
+        self.pickle_funcs = set()
+
+    def visit_Import(self, node: ast.Import) -> None:
+        for alias in node.names:
+            if alias.name in ("pickle", "_pickle", "cPickle"):
+                self.pickle_modules.add(alias.asname or alias.name)
+        self.generic_visit(node)
+
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+        if node.module in ("pickle", "_pickle", "cPickle"):
+            for alias in node.names:
+                if alias.name in ("loads", "load"):
+                    self.pickle_funcs.add(alias.asname or alias.name)
+        self.generic_visit(node)
         
     def visit_Call(self, node: ast.Call) -> None:
         if isinstance(node.func, ast.Attribute):
@@ -22,7 +37,7 @@ class _DeserializationVisitor(ast.NodeVisitor):
             if isinstance(node.func.value, ast.Name):
                 module_name = node.func.value.id
                 
-                if module_name in ("pickle", "_pickle", "cPickle") and func_name in ("loads", "load"):
+                if module_name in self.pickle_modules and func_name in ("loads", "load"):
                     self.analyzer.findings.append(Finding(
                         vuln_type=VulnerabilityType.INSECURE_DESERIALIZATION,
                         severity=Severity.CRITICAL,
@@ -59,7 +74,7 @@ class _DeserializationVisitor(ast.NodeVisitor):
                             fix_after="yaml.safe_load(user_data)",
                             reference="https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html"
                         ))
-        elif isinstance(node.func, ast.Name) and node.func.id in ("pickle_loads", "pickle_load"):
+        elif isinstance(node.func, ast.Name) and (node.func.id in self.pickle_funcs or node.func.id in ("pickle_loads", "pickle_load")):
             self.analyzer.findings.append(Finding(
                 vuln_type=VulnerabilityType.INSECURE_DESERIALIZATION,
                 severity=Severity.CRITICAL,

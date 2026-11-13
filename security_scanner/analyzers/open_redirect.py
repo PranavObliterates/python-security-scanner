@@ -64,10 +64,19 @@ class _OpenRedirectVisitor(ast.NodeVisitor):
             func_name = node.func.attr
 
         if func_name in ("redirect", "HttpResponseRedirect", "HttpResponsePermanentRedirect"):
+            target_arg = None
             if node.args:
                 target_arg = node.args[0]
-                if self.analyzer._is_node_tainted(target_arg, self.tainted_urls):
-                    var_name = self.analyzer._extract_var_name(target_arg) or "url"
-                    self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), var_name)
+            else:
+                for kw in node.keywords:
+                    if kw.arg in ("to", "location", "redirect_to", "url"):
+                        target_arg = kw.value
+                        break
+                if not target_arg and node.keywords:
+                    target_arg = node.keywords[0].value
+
+            if target_arg and self.analyzer._is_node_tainted(target_arg, self.tainted_urls):
+                var_name = self.analyzer._extract_var_name(target_arg) or "url"
+                self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), var_name)
 
         self.generic_visit(node)

@@ -102,9 +102,19 @@ class _SSRFVisitor(ast.NodeVisitor):
             func_name = "urlopen"
             is_http_call = True
 
-        if is_http_call and node.args:
-            url_arg = node.args[0]
-            if self.analyzer._is_node_tainted(url_arg, self.tainted_urls):
+        if is_http_call:
+            url_arg = None
+            if node.args:
+                url_arg = node.args[0]
+            else:
+                for kw in node.keywords:
+                    if kw.arg in ("url", "req", "target") or not kw.arg:
+                        url_arg = kw.value
+                        break
+                if not url_arg and node.keywords:
+                    url_arg = node.keywords[0].value
+
+            if url_arg and self.analyzer._is_node_tainted(url_arg, self.tainted_urls):
                 var_name = self.analyzer._extract_var_name(url_arg) or "url"
                 self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), func_name, var_name)
 

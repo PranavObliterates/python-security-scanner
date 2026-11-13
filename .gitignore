@@ -41,7 +41,7 @@ htmlcov/
 
 # Local reports
 *.pdf
+demo_report.*
 
 # Agent artifacts
 .agents/
-
