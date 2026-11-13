@@ -1,6 +1,7 @@
 """Command Line Interface for PySecure."""
 import os
 import sys
+import re
 import argparse
 import importlib.util
 from security_scanner.core.scanner import scan_app
@@ -12,12 +13,14 @@ from security_scanner import __version__
 
 
 def load_app_from_path(app_target: str):
-    """Load Flask or Django app object from file path or module string.
+    """Load Flask or Django app object from file path, directory, or module string.
 
     Supports:
+        - "path/to/project_dir" (finds app.py, wsgi.py, manage.py)
         - "path/to/app.py" (looks for 'app' or 'application')
         - "path/to/app.py:app"
         - "C:\\path\\to\\app.py:app"
+        - "path/to/manage.py" (initializes Django and gets WSGI application)
         - "my_module.wsgi:application"
     """
     cwd = os.getcwd()
@@ -31,21 +34,84 @@ def load_app_from_path(app_target: str):
             file_part, var_name = parts[0], parts[1]
 
     abs_path = os.path.abspath(file_part)
+
+    # If target is a directory, resolve to an entry point file
+    if os.path.isdir(abs_path):
+        candidates = ["app.py", "wsgi.py", "manage.py", "main.py", "application.py"]
+        found_target = None
+        for cand in candidates:
+            cand_path = os.path.join(abs_path, cand)
+            if os.path.isfile(cand_path):
+                found_target = cand_path
+                break
+        if not found_target:
+            for root, dirs, files in os.walk(abs_path):
+                dirs[:] = [d for d in dirs if d not in (".git", ".venv", "venv", "__pycache__", "node_modules")]
+                for cand in candidates:
+                    if cand in files:
+                        found_target = os.path.join(root, cand)
+                        break
+                if found_target:
+                    break
+        if found_target:
+            abs_path = found_target
+            file_part = found_target
+        else:
+            raise FileNotFoundError(
+                f"Directory '{app_target}' contains no recognizable entry point (app.py, wsgi.py, manage.py)."
+            )
+
     if os.path.isfile(abs_path):
         app_dir = os.path.dirname(abs_path)
-        if app_dir not in sys.path:
-            sys.path.insert(0, app_dir)
+        parent_dir = os.path.dirname(app_dir)
+        grandparent_dir = os.path.dirname(parent_dir)
+        for p in [app_dir, parent_dir, grandparent_dir]:
+            if p and os.path.isdir(p) and p not in sys.path:
+                sys.path.insert(0, p)
 
         spec = importlib.util.spec_from_file_location("pysecure_target_app", abs_path)
         if spec is None or spec.loader is None:
             raise ImportError(f"Could not load module specification from '{file_part}'")
         mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
+        try:
+            spec.loader.exec_module(mod)
+        except Exception as e:
+            # Check if this is a Django file requiring settings
+            if "DJANGO_SETTINGS_MODULE" in str(e) or not os.environ.get("DJANGO_SETTINGS_MODULE"):
+                try:
+                    with open(abs_path, "r", encoding="utf-8", errors="ignore") as f:
+                        content = f.read()
+                    m = re.search(r"['\"]DJANGO_SETTINGS_MODULE['\"]\s*,\s*['\"]([^'\"]+)['\"]", content)
+                    if m:
+                        os.environ.setdefault("DJANGO_SETTINGS_MODULE", m.group(1))
+                        import django
+                        django.setup()
+                        from django.core.wsgi import get_wsgi_application
+                        return get_wsgi_application()
+                except Exception:
+                    pass
+            raise
 
         if var_name:
             app_obj = getattr(mod, var_name, None)
         else:
             app_obj = getattr(mod, "app", None) or getattr(mod, "application", None)
+
+        if app_obj is None:
+            # Check if this is a Django manage.py or contains DJANGO_SETTINGS_MODULE
+            try:
+                with open(abs_path, "r", encoding="utf-8", errors="ignore") as f:
+                    content = f.read()
+                m = re.search(r"['\"]DJANGO_SETTINGS_MODULE['\"]\s*,\s*['\"]([^'\"]+)['\"]", content)
+                if m:
+                    settings_mod = m.group(1)
+                    os.environ.setdefault("DJANGO_SETTINGS_MODULE", settings_mod)
+                    import django
+                    django.setup()
+                    from django.core.wsgi import get_wsgi_application
+                    return get_wsgi_application()
+            except Exception:
+                pass
 
         if app_obj is None:
             raise AttributeError(f"Could not find 'app' or 'application' object in '{file_part}'.")
@@ -66,6 +132,8 @@ def load_app_from_path(app_target: str):
                 app_obj = app_obj()
             except Exception:
                 pass
+        if app_obj is None:
+            raise AttributeError(f"Could not find 'app' or 'application' object in module '{file_part}'.")
         return app_obj
     except Exception as e:
         raise ImportError(f"Cannot load target '{app_target}': {e}")
