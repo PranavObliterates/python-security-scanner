@@ -88,7 +88,7 @@ class _XSSVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_BinOp(self, node: ast.BinOp) -> None:
-        """Detect HTML string concatenation with untrusted input."""
+        """Detect HTML string concatenation or % formatting with untrusted input."""
         if isinstance(node.op, ast.Add):
             full_string = self._reconstruct_binop_string(node)
             if HTML_TAG_PATTERN.search(full_string):
@@ -102,10 +102,39 @@ class _XSSVisitor(ast.NodeVisitor):
                         context="concatenation with HTML tags",
                     )
                     return
+        elif isinstance(node.op, ast.Mod):
+            format_str = ""
+            if isinstance(node.left, ast.Constant) and isinstance(node.left.value, str):
+                format_str = node.left.value
+            if HTML_TAG_PATTERN.search(format_str):
+                if self.analyzer._is_node_tainted(node.right, self.tainted_vars):
+                    var_name = self.analyzer._extract_var_name(node.right) or "input"
+                    self.analyzer._flag(
+                        line=node.lineno,
+                        code=self.analyzer._get_line_text(node.lineno),
+                        variable=var_name,
+                        context="% formatting with HTML tags",
+                    )
+                    return
         self.generic_visit(node)
 
     def visit_Call(self, node: ast.Call) -> None:
-        """Detect render_template_string() with user input."""
+        """Detect render_template_string() or str.format() with user input."""
+        if isinstance(node.func, ast.Attribute) and node.func.attr == "format":
+            format_str = ""
+            if isinstance(node.func.value, ast.Constant) and isinstance(node.func.value.value, str):
+                format_str = node.func.value.value
+            if HTML_TAG_PATTERN.search(format_str):
+                for arg in node.args:
+                    if self.analyzer._is_node_tainted(arg, self.tainted_vars):
+                        var_name = self.analyzer._extract_var_name(arg) or "input"
+                        self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), var_name, "str.format() with HTML tags")
+                        return
+                for kw in node.keywords:
+                    if self.analyzer._is_node_tainted(kw.value, self.tainted_vars):
+                        var_name = kw.arg or "input"
+                        self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), var_name, "str.format() with HTML tags")
+                        return
         if self._is_render_template_string(node):
             if node.args:
                 arg = node.args[0]

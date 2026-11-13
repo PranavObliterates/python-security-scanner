@@ -233,4 +233,26 @@ class TestPDFReport:
         assert os.path.exists(out_file)
         assert os.path.getsize(out_file) > 1000
 
+    def test_sarif_report_structure(self, tmp_path):
+        """SARIF report should match OASIS SARIF v2.1.0 schema structure."""
+        from security_scanner.reporting.sarif_report import generate_sarif_report, save_sarif_report
+        result = _make_sample_result()
+        sarif = generate_sarif_report(result)
+        assert sarif["version"] == "2.1.0"
+        assert len(sarif["runs"]) == 1
+        run = sarif["runs"][0]
+        assert run["tool"]["driver"]["name"] == "PySecure"
+        assert len(run["results"]) == 3
+        
+        # Test saving to disk
+        out_file = str(tmp_path / "report.sarif")
+        save_sarif_report(result, out_file)
+        import os, json
+        assert os.path.exists(out_file)
+        with open(out_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        assert data["version"] == "2.1.0"
+        assert len(data["runs"][0]["results"]) == 3
+
+
 

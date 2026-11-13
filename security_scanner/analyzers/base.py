@@ -11,12 +11,26 @@ USER_INPUT_SOURCES = [
     # Flask patterns
     "request.args", "request.form", "request.json",
     "request.values", "request.data", "request.get_json",
-    "request.cookies", "request.headers",
+    "request.cookies", "request.headers", "request.query_string",
+    "request.files", "request.view_args",
     # Django patterns
     "request.POST", "request.GET", "request.FILES",
     "request.body", "request.META", "request.COOKIES",
-    "request.query_params",
+    "request.query_params", "request.path_params",
 ]
+
+# Safe internal request attributes that do NOT represent untrusted user input
+SAFE_REQUEST_ATTRIBUTES = {
+    "path", "full_path", "get_full_path", "method", "endpoint", "is_secure",
+    "scheme", "user", "session", "blueprint", "url_root", "host_url",
+    "resolver_match", "site",
+}
+
+# Sanitizers and safe type converters/URL generators
+SAFE_CALL_FUNCS = {
+    "secure_filename", "escape", "html_escape", "int", "float",
+    "url_for", "reverse", "reverse_lazy", "resolve_url", "quote",
+}
 
 
 class BaseAnalyzer(ABC):
@@ -57,11 +71,18 @@ class BaseAnalyzer(ABC):
         if not name:
             return False
         if name.startswith("request."):
+            parts = name.split(".")
+            if len(parts) > 1 and parts[1] in SAFE_REQUEST_ATTRIBUTES:
+                return False
             return True
 
         escaped = re.escape(name)
-        for safe in ("int(", "float(", "escape(", "secure_filename(", "url_for(", "reverse("):
+        for safe in ("int(", "float(", "escape(", "secure_filename(", "url_for(", "reverse(", "quote("):
             if re.search(rf"\b{escaped}\s*=\s*{re.escape(safe)}", self.source_code):
+                return False
+
+        for safe_attr in SAFE_REQUEST_ATTRIBUTES:
+            if re.search(rf"\b{escaped}\s*=\s*.*request\.{re.escape(safe_attr)}\b", self.source_code):
                 return False
 
         if re.search(rf"\b{escaped}\s*=\s*.*request\.", self.source_code):
@@ -101,13 +122,24 @@ class BaseAnalyzer(ABC):
             if any(full_name.startswith(src) for src in USER_INPUT_SOURCES):
                 return True
             if isinstance(node.value, ast.Name) and node.value.id == "request":
+                if node.attr in SAFE_REQUEST_ATTRIBUTES:
+                    return False
                 return True
         elif isinstance(node, ast.Call):
+            call_func = self._extract_var_name(node.func)
+            func_base = call_func.split(".")[-1]
+            if func_base in SAFE_REQUEST_ATTRIBUTES:
+                return False
             if isinstance(node.func, ast.Attribute):
                 if node.func.attr in ("get", "getlist", "get_json") and self._is_direct_user_input(node.func.value):
                     return True
-                full_func = self._extract_var_name(node.func)
-                if any(full_func.startswith(src) for src in USER_INPUT_SOURCES) or full_func.startswith("request."):
+                if any(call_func.startswith(src) for src in USER_INPUT_SOURCES) or call_func.startswith("request."):
+                    if node.func.attr in SAFE_REQUEST_ATTRIBUTES:
+                        return False
+                    return True
+                if isinstance(node.func.value, ast.Name) and node.func.value.id == "request":
+                    if node.func.attr in SAFE_REQUEST_ATTRIBUTES:
+                        return False
                     return True
         elif isinstance(node, ast.Subscript):
             if self._is_direct_user_input(node.value):
@@ -130,6 +162,8 @@ class BaseAnalyzer(ABC):
             return node.id in tainted or self._is_user_input_name(node.id)
 
         if isinstance(node, ast.Attribute):
+            if isinstance(node.value, ast.Name) and node.value.id == "request":
+                return self._is_direct_user_input(node)
             return self._is_direct_user_input(node) or self._is_node_tainted(node.value, tainted)
 
         if isinstance(node, ast.Subscript):
@@ -139,12 +173,18 @@ class BaseAnalyzer(ABC):
             if self._is_direct_user_input(node):
                 return True
             call_name = self._extract_var_name(node.func)
+            func_base = call_name.split(".")[-1]
             # Respect sanitization functions and safe internal URL/type generators
-            if any(san in call_name for san in ("secure_filename", "escape", "int", "float", "url_for", "reverse", "reverse_lazy", "resolve_url")):
+            if func_base in SAFE_CALL_FUNCS or call_name in SAFE_CALL_FUNCS:
                 return False
             # Method call on tainted object, e.g. user_input.strip()
-            if isinstance(node.func, ast.Attribute) and self._is_node_tainted(node.func.value, tainted):
-                return True
+            if isinstance(node.func, ast.Attribute):
+                if isinstance(node.func.value, ast.Name) and node.func.value.id == "request":
+                    if node.func.attr in SAFE_REQUEST_ATTRIBUTES:
+                        return False
+                    return self._is_direct_user_input(node)
+                if self._is_node_tainted(node.func.value, tainted):
+                    return True
             # Arguments passed to functions (e.g. os.path.join(DIR, user_input))
             if any(self._is_node_tainted(arg, tainted) for arg in node.args):
                 return True

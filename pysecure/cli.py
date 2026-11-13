@@ -9,6 +9,7 @@ from security_scanner.reporting.console import print_report
 from security_scanner.reporting.json_report import save_json_report
 from security_scanner.reporting.html_report import save_html_report
 from security_scanner.reporting.pdf_report import save_pdf_report
+from security_scanner.reporting.sarif_report import save_sarif_report
 from security_scanner import __version__
 
 
@@ -182,6 +183,11 @@ def main(argv=None):
         help="Save report to PDF file with Gemini AI security insights."
     )
     scan_parser.add_argument(
+        "--sarif",
+        metavar="FILE",
+        help="Save report to OASIS SARIF v2.1.0 format (for GitHub Code Scanning)."
+    )
+    scan_parser.add_argument(
         "--api-key",
         metavar="KEY",
         help="Session-only Gemini API key for AI executive report (not saved to disk)."
@@ -217,6 +223,9 @@ def main(argv=None):
             save_json_report(result, args.json)
         if args.html:
             save_html_report(result, args.html)
+        if args.sarif:
+            save_sarif_report(result, args.sarif)
+            print(f"   [*] SARIF report saved to: {args.sarif}")
         if args.pdf:
             save_pdf_report(
                 result,

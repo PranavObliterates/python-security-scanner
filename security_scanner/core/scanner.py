@@ -61,6 +61,10 @@ def scan_app(app, dynamic: bool = True, framework: str = "auto") -> ScanResult:
     # Step 2: Static Analysis (SAST) on each route
     for route in routes:
         if route.source_code:
+            # Skip third-party framework/library code inside site-packages / dist-packages
+            if route.file_path and ("site-packages" in route.file_path or "dist-packages" in route.file_path):
+                continue
+
             analyzers = [
                 SQLInjectionAnalyzer(route.path, route.file_path or "unknown", route.source_code),
                 XSSAnalyzer(route.path, route.file_path or "unknown", route.source_code),

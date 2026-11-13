@@ -91,7 +91,7 @@ class _SQLInjectionVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_BinOp(self, node: ast.BinOp) -> None:
-        """Detect string concatenation with SQL keywords.
+        """Detect string concatenation or % formatting with SQL keywords.
 
         Example: query = "SELECT * FROM users WHERE id = " + user_id
         """
@@ -117,7 +117,39 @@ class _SQLInjectionVisitor(ast.NodeVisitor):
                                 variable=var,
                             )
                             return
+        elif isinstance(node.op, ast.Mod):
+            format_str = ""
+            if isinstance(node.left, ast.Constant) and isinstance(node.left.value, str):
+                format_str = node.left.value
+            if SQL_KEYWORDS_PATTERN.search(format_str):
+                if self.analyzer._is_node_tainted(node.right, self.tainted_vars):
+                    var_name = self.analyzer._extract_var_name(node.right) or "input"
+                    self.analyzer._flag(
+                        line=node.lineno,
+                        code=self.analyzer._get_line_text(node.lineno),
+                        variable=var_name,
+                    )
+                    return
 
+        self.generic_visit(node)
+
+    def visit_Call(self, node: ast.Call) -> None:
+        """Detect str.format() calls on SQL queries with tainted input."""
+        if isinstance(node.func, ast.Attribute) and node.func.attr == "format":
+            format_str = ""
+            if isinstance(node.func.value, ast.Constant) and isinstance(node.func.value.value, str):
+                format_str = node.func.value.value
+            if SQL_KEYWORDS_PATTERN.search(format_str):
+                for arg in node.args:
+                    if self.analyzer._is_node_tainted(arg, self.tainted_vars):
+                        var_name = self.analyzer._extract_var_name(arg) or "input"
+                        self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), var_name)
+                        return
+                for kw in node.keywords:
+                    if self.analyzer._is_node_tainted(kw.value, self.tainted_vars):
+                        var_name = kw.arg or "input"
+                        self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), var_name)
+                        return
         self.generic_visit(node)
 
     def _find_tainted_child(self, node: ast.AST) -> Optional[ast.AST]:
@@ -137,6 +169,8 @@ class _SQLInjectionVisitor(ast.NodeVisitor):
             parts.append(self._reconstruct_binop_string(node.left))
         if isinstance(node.right, ast.Constant):
             parts.append(str(node.right.value))
+        elif isinstance(node.right, ast.BinOp):
+            parts.append(self._reconstruct_binop_string(node.right))
         return " ".join(parts)
 
     def _extract_binop_variables(self, node: ast.BinOp) -> List[str]:

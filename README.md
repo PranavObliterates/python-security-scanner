@@ -77,12 +77,12 @@ PySecure operates via a dual-engine analysis pipeline designed for maximum speed
                              │ (Normalized Findings) │
                              └───────────┬───────────┘
                                          │
-        ┌───────────────────┬────────────┴───────┬───────────────────┐
-        ▼                   ▼                    ▼                   ▼
-┌───────────────┐   ┌───────────────┐    ┌───────────────┐   ┌───────────────┐
-│ Console ANSI  │   │  JSON Report  │    │ HTML Dashboard│   │ PDF Executive │
-│ Output        │   │  (CI/CD)      │    │ (Visual UI)   │   │ + Gemini AI   │
-└───────────────┘   └───────────────┘    └───────────────┘   └───────────────┘
+         ┌───────────────────┬────────────┴───────┬───────────────────┬───────────────────┐
+         ▼                   ▼                    ▼                   ▼                   ▼
+ ┌───────────────┐   ┌───────────────┐    ┌───────────────┐   ┌───────────────┐   ┌───────────────┐
+ │ Console ANSI  │   │  JSON Report  │    │ SARIF v2.1.0  │   │ HTML Dashboard│   │ PDF Executive │
+ │ Output        │   │  (CI/CD)      │    │ (GitHub Code) │   │ (Visual UI)   │   │ + Gemini AI   │
+ └───────────────┘   └───────────────┘    └───────────────┘   └───────────────┘   └───────────────┘
 ```
 
 1. **Static Analysis (SAST)**:
@@ -100,6 +100,7 @@ PySecure operates via a dual-engine analysis pipeline designed for maximum speed
 3. **Reporting & AI Insights**:
    - **Console Output**: Instant ANSI color-coded vulnerability summaries with remediation code diffs (`fix_before` vs. `fix_after`).
    - **JSON Export**: Machine-readable format conforming to automated vulnerability management platforms and CI/CD pipelines.
+   - **SARIF v2.1.0 Export**: OASIS standard format consumed directly by GitHub Code Scanning, GitLab SAST, and VS Code.
    - **HTML Dashboard**: Self-contained visual report with interactive severity filtering and OWASP category mapping.
    - **Executive PDF + Gemini AI**: Formatted PDF report with automatic XML-entity escaping for HTML/XSS code snippets, combining metrics with optional session-only Google Gemini AI executive analysis and prioritized developer remediation roadmaps.
 
@@ -132,6 +133,9 @@ pysecure scan vuln_django.wsgi:application --pdf django_audit.pdf
 
 # Scan with session-only Gemini API key
 pysecure scan app.py --pdf audit.pdf --api-key YOUR_GEMINI_KEY
+
+# Export SARIF for GitHub Code Scanning / CI
+pysecure scan app.py --sarif results.sarif
 
 # Static-only scan (fast mode without running test client)
 pysecure scan app.py --static-only --json report.json

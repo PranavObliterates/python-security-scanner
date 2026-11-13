@@ -17,6 +17,14 @@ class _SSTIVisitor(ast.NodeVisitor):
         self.analyzer = analyzer
         self.static_vars = set()
         self.dynamic_vars = set()
+        self.string_template_imported = False
+
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+        if node.module == "string":
+            for alias in node.names:
+                if alias.name == "Template":
+                    self.string_template_imported = True
+        self.generic_visit(node)
 
     def visit_Assign(self, node: ast.Assign) -> None:
         """Track variable assignments to distinguish static constants from dynamic expressions."""
@@ -44,9 +52,23 @@ class _SSTIVisitor(ast.NodeVisitor):
         else:
             func_name = ""
 
+        if self.string_template_imported and func_name == "Template":
+            self.generic_visit(node)
+            return
+
         if func_name in ("render_template_string", "Template"):
+            arg = None
             if node.args:
                 arg = node.args[0]
+            else:
+                for kw in node.keywords:
+                    if kw.arg in ("source", "template_string", "template"):
+                        arg = kw.value
+                        break
+                if not arg and node.keywords:
+                    arg = node.keywords[0].value
+
+            if arg is not None:
                 is_dynamic = False
                 if isinstance(arg, (ast.JoinedStr, ast.BinOp, ast.Call, ast.Subscript)):
                     is_dynamic = True
