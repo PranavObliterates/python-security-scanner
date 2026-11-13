@@ -96,8 +96,13 @@ def discover_django_routes(urlconf=None) -> List[RouteInfo]:
                     source = inspect.getsource(actual_func)
                     file_path = inspect.getfile(actual_func)
                 except (OSError, TypeError):
-                    source = None
-                    file_path = None
+                    try:
+                        unwrapped = inspect.unwrap(actual_func)
+                        source = inspect.getsource(unwrapped)
+                        file_path = inspect.getfile(unwrapped)
+                    except (OSError, TypeError):
+                        source = None
+                        file_path = None
 
                 # Determine HTTP methods
                 if hasattr(view_func, "view_class"):

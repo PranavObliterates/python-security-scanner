@@ -61,7 +61,9 @@ def generate_ai_security_summary(result: ScanResult, api_key: Optional[str] = No
 
     findings_summary = "\n".join(findings_text) or "No vulnerabilities detected."
 
-    prompt = f"""You are a Principal Application Security Architect. Analyze the following security scan results from an automated SAST/DAST audit:
+    prompt = f"""You are a Principal Application Security Architect. Analyze the following security scan results from an automated source and passive runtime audit.
+Do not provide exploit payloads, attack instructions, or steps for reproducing an injection.
+Focus only on explaining why each endpoint is risky and how a developer can fix it.
 
 Application: {result.app_name}
 Total Findings: {len(result.findings)}
@@ -75,8 +77,9 @@ Please provide a structured, professional security assessment with exactly three
 ### 1. Executive Summary
 Provide a 2-3 paragraph executive summary of the security posture, overall risk level, and business impact.
 
-### 2. Threat & Attack Surface Analysis
-Explain the primary attack vectors, how an attacker might chain these vulnerabilities (e.g. SQLi or Deserialization into RCE), and the most urgent threats.
+### 2. Endpoint Risk Analysis
+For each critical or high finding, explain the unsafe source-to-sink data flow,
+the affected endpoint, the confidence level, and the likely impact in defensive terms.
 
 ### 3. Prioritized Remediation Roadmap
 Provide an immediate, actionable 3-step action plan for developers to harden this application.
@@ -183,8 +186,9 @@ def _generate_fallback_summary(result: ScanResult, error_msg: str = "") -> Dict[
         exec_summary += f"\n\n[Note: {error_msg}]"
 
     risk_assessment = (
-        "Primary exposure points include input handling in route handlers and dynamic query/template rendering. "
-        "Any finding with CRITICAL or HIGH severity should be considered an active attack surface vector."
+        "Primary exposure points are the endpoints and source-to-sink flows listed in the findings. "
+        "Prioritize critical and high findings for code review and remediation; this report does not "
+        "attempt to exploit or validate them with attack payloads."
     )
 
     remediation_plan = (

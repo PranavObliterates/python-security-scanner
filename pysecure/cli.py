@@ -124,6 +124,10 @@ def load_app_from_path(app_target: str):
                 pass
         return app_obj
 
+    # If not a file/dir and input contains path separators or file extension, fail fast
+    if not os.path.exists(abs_path) and ("/" in file_part or "\\" in file_part or file_part.endswith(".py")):
+        raise FileNotFoundError(f"Target path does not exist: '{app_target}'")
+
     # Try standard Python module import
     try:
         mod = importlib.import_module(file_part)
@@ -165,7 +169,7 @@ def main(argv=None):
     scan_parser.add_argument(
         "--static-only",
         action="store_true",
-        help="Run static code analysis (SAST) only; disable dynamic payload testing."
+        help="Run source analysis only; disable passive baseline requests."
     )
     scan_parser.add_argument(
         "--json",
@@ -241,4 +245,3 @@ def main(argv=None):
 
 if __name__ == "__main__":
     main()
-

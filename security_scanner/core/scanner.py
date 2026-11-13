@@ -34,7 +34,8 @@ def scan_app(app, dynamic: bool = True, framework: str = "auto") -> ScanResult:
         app: The Flask/Django application object.
              For Django, pass the result of django.core.wsgi.get_wsgi_application()
              or the Django settings module.
-        dynamic: Whether to run dynamic payload testing (DAST).
+        dynamic: Whether to run passive dynamic checks (DAST). No exploit
+            payloads are generated or sent.
         framework: "flask", "django", or "auto" (detect automatically).
 
     Returns:

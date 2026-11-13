@@ -67,11 +67,29 @@ class _CommandInjectionVisitor(ast.NodeVisitor):
         call_pair = self._resolve_call(node.func)
         if call_pair in DANGEROUS_CALLS or (isinstance(node.func, ast.Name) and node.func.id in ("system", "popen")):
             func_name = f"{call_pair[0]}.{call_pair[1]}" if call_pair else getattr(node.func, "id", "command")
+            cmd_arg = None
             if node.args:
                 cmd_arg = node.args[0]
-                if self.analyzer._is_node_tainted(cmd_arg, self.tainted_cmds):
-                    var_name = self.analyzer._extract_var_name(cmd_arg) or "input"
-                    self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), func_name, var_name)
+            else:
+                for kw in node.keywords:
+                    if kw.arg in ("args", "command", "cmd"):
+                        cmd_arg = kw.value
+                        break
+                if not cmd_arg and node.keywords:
+                    cmd_arg = node.keywords[0].value
+
+            if cmd_arg:
+                # If calling subprocess with an argument list, verify if shell=True is set.
+                # When shell=False or omitted with list args, execution does not use a shell.
+                is_list_arg = isinstance(cmd_arg, (ast.List, ast.Tuple))
+                shell_true = any(
+                    kw.arg == "shell" and isinstance(kw.value, ast.Constant) and bool(kw.value.value)
+                    for kw in node.keywords
+                )
+                if not (is_list_arg and not shell_true and call_pair and call_pair[0] == "subprocess"):
+                    if self.analyzer._is_node_tainted(cmd_arg, self.tainted_cmds):
+                        var_name = self.analyzer._extract_var_name(cmd_arg) or "input"
+                        self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), func_name, var_name)
 
         self.generic_visit(node)
 

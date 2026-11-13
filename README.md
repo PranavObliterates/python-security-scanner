@@ -20,7 +20,7 @@ It generates human-friendly terminal reports, machine-readable JSON, visual HTML
 | **A02: Cryptographic Failures** | Hardcoded Secrets & Passwords | SAST (AST Pattern Engine) |
 | **A02: Cryptographic Failures** | Broken Hashing (MD4, MD5, SHA-1, SHA-0) | SAST |
 | **A02: Cryptographic Failures** | Insecure Cookie Attributes | DAST (Runtime Headers) |
-| **A03: Injection** | SQL Injection (SQLi) | SAST & DAST (Simulated Payloads) |
+| **A03: Injection** | SQL Injection (SQLi) | SAST (source-to-sink analysis) |
 | **A03: Injection** | Cross-Site Scripting (Reflected XSS) | SAST & DAST (Response Reflection) |
 | **A03: Injection** | Command Injection (RCE) | SAST |
 | **A03: Injection** | Server-Side Template Injection (SSTI) | SAST & DAST |
@@ -65,7 +65,7 @@ PySecure operates via a dual-engine analysis pipeline designed for maximum speed
      │   AST Taint Engine    │                       │   In-Memory Prober    │
      ├───────────────────────┤                       ├───────────────────────┤
      │ • Route AST traversal │                       │ • Test client harness │
-     │ • Input source traces │                       │ • Fuzzing payloads    │
+     │ • Input source traces │                       │ • Benign baseline    │
      │ • Taint propagation   │                       │ • Response reflection │
      │ • Config audit        │                       │ • Header/Cookie audit │
      └───────────┬───────────┘                       └───────────┬───────────┘
@@ -93,8 +93,8 @@ PySecure operates via a dual-engine analysis pipeline designed for maximum speed
    - **Configuration Auditing**: Inspects Flask and Django application configurations for insecure `DEBUG = True`, weak or hardcoded `SECRET_KEY`, missing `CSRF` protection, and missing security middleware.
 
 2. **Dynamic Analysis (DAST)**:
-   - **In-Memory Simulated Probing**: Harnesses Flask and Django built-in test clients to execute safe, non-destructive payloads without deploying a live web server or network listeners.
-   - **Response Reflection & Behavior Testing**: Detects Reflected XSS through DOM tag reflection, SQLi via database error responses, and SSTI via template evaluation differential checking against baseline responses.
+   - **Passive Baseline Checks**: Uses framework test clients only for benign requests. It never generates or sends SQL, XSS, SSTI, deserialization, or command-injection payloads.
+   - **Endpoint Risk Identification**: SAST maps untrusted input to dangerous sinks and reports the affected endpoint, source file, line, confidence, and remediation. DAST complements this with response-header, cookie, and baseline error checks.
    - **Transport & Cookie Audit**: Analyzes response headers (`Content-Security-Policy`, `Strict-Transport-Security`, `X-Frame-Options`, `X-Content-Type-Options`) and inspects session cookies for `Secure`, `HttpOnly`, and `SameSite` flags.
 
 3. **Reporting & AI Insights**:
@@ -131,7 +131,7 @@ pysecure scan vuln-django/manage.py
 pysecure scan vuln-django/vuln_django/wsgi.py --pdf django_audit.pdf
 pysecure scan vuln_django.wsgi:application --pdf django_audit.pdf
 
-# Scan with session-only Gemini API key
+# Scan with session-only Gemini API key for remediation guidance
 pysecure scan app.py --pdf audit.pdf --api-key YOUR_GEMINI_KEY
 
 # Export SARIF for GitHub Code Scanning / CI
@@ -143,12 +143,15 @@ pysecure scan app.py --static-only --json report.json
 
 ---
 
-## 🤖 Gemini AI Executive Reporting (Zero Disk Persistence)
+## 🤖 Optional AI Remediation Guidance (Zero Disk Persistence)
 
-PySecure integrates directly with Google's Gemini models to translate technical findings into executive risk summaries and prioritized developer remediation roadmaps:
+PySecure can use Google's Gemini API to translate technical findings into endpoint-specific, prioritized developer remediation guidance:
 - **Session-Only Security**: You enter the Gemini API key into the terminal when prompted. It remains **strictly in volatile process memory** and is **never written to disk, config files, or git**.
 - When the terminal or process terminates, the key is completely purged.
 - If you skip the prompt or do not have an API key, PySecure automatically falls back to its built-in rule engine so PDF generation always succeeds.
+- The AI prompt explicitly forbids exploit payloads and attack instructions. The scanner remains useful without an API key because every finding includes a deterministic fix recommendation.
+
+PySecure does not self-modify or silently update itself. Automatic updates would create a supply-chain and reproducibility risk. Keep the scanner current through reviewed package releases and pin versions in CI; the scanner can still operate offline with its built-in rules.
 
 ---
 

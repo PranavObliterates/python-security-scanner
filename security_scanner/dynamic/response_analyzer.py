@@ -1,28 +1,7 @@
 """Response analyzer — examines HTTP responses for signs of vulnerabilities."""
-import re
-from typing import List, Optional
+from typing import List
 from ..models.finding import Finding, Severity, VulnerabilityType
 
-
-# Database error patterns that confirm SQL injection
-DB_ERROR_PATTERNS = [
-    r"sql\s*syntax",
-    r"mysql",
-    r"sqlite3\.OperationalError",
-    r"psycopg2",
-    r"ORA-\d{5}",
-    r"unclosed quotation",
-    r"unterminated string",
-    r"SQLSTATE",
-    r"syntax error",
-    r"near \"",
-    r"unrecognized token",
-    r"ProgrammingError",
-    r"DatabaseError",
-    r"OperationalError",
-]
-
-DB_ERROR_REGEX = re.compile("|".join(DB_ERROR_PATTERNS), re.IGNORECASE)
 
 # Security headers to check
 RECOMMENDED_HEADERS = {
@@ -47,22 +26,6 @@ RECOMMENDED_HEADERS = {
         "all communication uses HTTPS, preventing downgrade attacks."
     ),
 }
-
-
-def check_response_for_sqli(response_body: str) -> bool:
-    """Check if a response body contains database error patterns.
-
-    Returns True if SQL injection appears confirmed.
-    """
-    return bool(DB_ERROR_REGEX.search(response_body))
-
-
-def check_response_for_xss(response_body: str, payload: str) -> bool:
-    """Check if an XSS payload is reflected unescaped in the response.
-
-    Returns True if the exact payload appears in the response body.
-    """
-    return payload in response_body
 
 
 def check_security_headers(response_headers: dict, endpoint: str) -> List[Finding]:

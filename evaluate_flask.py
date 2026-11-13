@@ -6,7 +6,7 @@ Run with: python evaluate_flask.py
 
 How it works:
   1. Define test cases: code snippets labeled as vulnerable or safe (SAST)
-  2. Define DAST test cases: Flask routes to probe with payloads (DAST)
+  2. Define passive DAST test cases: Flask routes receive benign baseline requests
   3. Run the scanner's analyzers on each snippet / app
   4. Compare scanner output to ground truth
   5. Calculate and display metrics (separate + combined)
@@ -398,19 +398,10 @@ def _build_dast_safe_app():
 
 
 DAST_TEST_CASES = [
-    # (description, app_builder, vuln_type_to_find, expect_found)
-    ("DAST SQLi: detects SQL injection in /user",
-     _build_dast_vulnerable_app, VulnerabilityType.SQL_INJECTION, True),
-    ("DAST XSS: detects reflected XSS in /search",
-     _build_dast_vulnerable_app, VulnerabilityType.XSS, True),
-    ("DAST SSTI: detects template injection in /ssti",
-     _build_dast_vulnerable_app, VulnerabilityType.SSTI, True),
-    ("DAST Deserialization: detects unsafe deserialize in /pickle",
-     _build_dast_vulnerable_app, VulnerabilityType.INSECURE_DESERIALIZATION, True),
-    ("DAST Safe: no SQLi in parameterized /user",
+    ("DAST passive: vulnerable app receives no exploit payloads",
+     _build_dast_vulnerable_app, VulnerabilityType.SQL_INJECTION, False),
+    ("DAST passive: safe app receives no exploit payloads",
      _build_dast_safe_app, VulnerabilityType.SQL_INJECTION, False),
-    ("DAST Safe: no XSS in escaped /search",
-     _build_dast_safe_app, VulnerabilityType.XSS, False),
 ]
 
 
@@ -528,7 +519,7 @@ def evaluate_dast():
     tn: int = 0
     fn: int = 0
 
-    _print_header("DAST (Dynamic Analysis) EVALUATION")
+    _print_header("DAST (PASSIVE DYNAMIC SAFETY) EVALUATION")
     print()
 
     for description, app_builder, vuln_type, expect_found in DAST_TEST_CASES:
@@ -545,7 +536,15 @@ def evaluate_dast():
                 tn += 1  # type: ignore
             continue
 
-        detected = any(f.vuln_type == vuln_type for f in findings)
+        detected = any(
+            f.vuln_type in {
+                VulnerabilityType.SQL_INJECTION,
+                VulnerabilityType.XSS,
+                VulnerabilityType.SSTI,
+                VulnerabilityType.INSECURE_DESERIALIZATION,
+            }
+            for f in findings
+        )
 
         if expect_found and detected:
             status = "[OK] TP"
@@ -562,9 +561,9 @@ def evaluate_dast():
 
         print(f"  {status}  {description}")
 
-    _print_confusion_matrix(tp, fp, tn, fn, "DAST")
+    _print_confusion_matrix(tp, fp, tn, fn, "DAST SAFETY")
     metrics = _calc_metrics(tp, fp, tn, fn)
-    _print_metrics(metrics, "DAST")
+    _print_metrics(metrics, "DAST SAFETY (no exploit detection)")
     return metrics
 
 
