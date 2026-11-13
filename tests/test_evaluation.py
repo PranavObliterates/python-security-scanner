@@ -124,3 +124,27 @@ obj = pickle.loads(data)
         """Unknown vuln type should return empty list."""
         result = run_analyzer("x = 1", "unknown_type")
         assert result == []
+
+
+class TestFastAPIEvaluation:
+
+    def test_fastapi_sast_evaluation_runs(self):
+        from evaluate_fastapi import evaluate_fastapi_sast
+        metrics = evaluate_fastapi_sast()
+        assert metrics is not None
+        assert metrics["accuracy"] >= 80.0
+        assert metrics["precision"] >= 80.0
+        assert metrics["recall"] >= 80.0
+
+    def test_fastapi_config_evaluation_runs(self):
+        from evaluate_fastapi import evaluate_fastapi_config
+        metrics = evaluate_fastapi_config()
+        assert metrics is not None
+        assert metrics["accuracy"] >= 80.0
+
+    def test_fastapi_combined_evaluation_runs(self):
+        from evaluate_fastapi import evaluate
+        metrics = evaluate()
+        assert metrics is not None
+        assert metrics["accuracy"] >= 80.0
+
