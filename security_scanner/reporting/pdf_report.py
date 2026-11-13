@@ -4,7 +4,8 @@ Generates professional, styled security audit reports for stakeholders and engin
 """
 import os
 import datetime
-from typing import Optional
+import xml.sax.saxutils
+from typing import Optional, Any
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
@@ -17,6 +18,14 @@ from reportlab.pdfgen import canvas
 from ..models.scan_result import ScanResult
 from ..models.finding import Severity
 from .ai_advisor import generate_ai_security_summary, get_session_api_key
+
+
+def _esc(val: Any) -> str:
+    """Safely escape text for ReportLab XML/HTML Paragraph parsing."""
+    if val is None:
+        return ""
+    text = str(val)
+    return xml.sax.saxutils.escape(text, {'"': '&quot;'})
 
 
 class NumberedCanvas(canvas.Canvas):
@@ -180,7 +189,7 @@ def save_pdf_report(
     # ─────────────────────────────────────────────────────────────
     story.append(Paragraph("SECURITY AUDIT REPORT", title_style))
     story.append(Spacer(1, 4))
-    story.append(Paragraph(f"Target Application: <b>{result.app_name}</b> | SAST & DAST OWASP Top 10 Scan", subtitle_style))
+    story.append(Paragraph(f"Target Application: <b>{_esc(result.app_name)}</b> | SAST & DAST OWASP Top 10 Scan", subtitle_style))
     story.append(Spacer(1, 14))
 
     # Meta Overview Box
@@ -188,12 +197,12 @@ def save_pdf_report(
     grade = _compute_grade(result)
     meta_data = [
         [
-            Paragraph(f"<b>Scan Date:</b> {now_str}", body_style),
+            Paragraph(f"<b>Scan Date:</b> {_esc(now_str)}", body_style),
             Paragraph(f"<b>Routes Scanned:</b> {result.routes_scanned}", body_style),
         ],
         [
             Paragraph(f"<b>Duration:</b> {result.scan_duration_seconds:.2f} seconds", body_style),
-            Paragraph(f"<b>Overall Posture:</b> <b>{grade}</b>", body_style),
+            Paragraph(f"<b>Overall Posture:</b> <b>{_esc(grade)}</b>", body_style),
         ],
     ]
     meta_table = Table(meta_data, colWidths=[250, 250])
@@ -216,7 +225,7 @@ def save_pdf_report(
         ["HIGH", str(result.high_count), "Severe", "Remediate in current sprint"],
         ["MEDIUM", str(result.medium_count), "Moderate", "Address during regular release cycle"],
         ["LOW / INFO", str(result.low_count), "Minor", "Harden configuration best practices"],
-        ["TOTAL", str(len(result.findings)), "-", f"{result.summary()}"],
+        ["TOTAL", str(len(result.findings)), "-", f"{_esc(result.summary())}"],
     ]
     metrics_table = Table(metrics_data, colWidths=[90, 90, 80, 240])
     metrics_table.setStyle(TableStyle([
@@ -246,19 +255,19 @@ def save_pdf_report(
     story.append(Paragraph("<b>1. Executive Summary:</b>", h2_style))
     for p in ai_insights["executive_summary"].split("\n\n"):
         if p.strip():
-            story.append(Paragraph(p.strip().replace("\n", "<br/>"), body_style))
+            story.append(Paragraph(_esc(p.strip()).replace("\n", "<br/>"), body_style))
             story.append(Spacer(1, 4))
 
     story.append(Paragraph("<b>2. Threat & Attack Surface Analysis:</b>", h2_style))
     for p in ai_insights["risk_assessment"].split("\n\n"):
         if p.strip():
-            story.append(Paragraph(p.strip().replace("\n", "<br/>"), body_style))
+            story.append(Paragraph(_esc(p.strip()).replace("\n", "<br/>"), body_style))
             story.append(Spacer(1, 4))
 
     story.append(Paragraph("<b>3. Prioritized Remediation Roadmap:</b>", h2_style))
     for p in ai_insights["remediation_plan"].split("\n\n"):
         if p.strip():
-            story.append(Paragraph(p.strip().replace("\n", "<br/>"), body_style))
+            story.append(Paragraph(_esc(p.strip()).replace("\n", "<br/>"), body_style))
             story.append(Spacer(1, 4))
 
     story.append(Spacer(1, 14))
@@ -281,16 +290,15 @@ def save_pdf_report(
             sev_color = _get_severity_color(finding.severity)
 
             header_text = (
-                f"<b>#{idx}. [{finding.severity.value}] {finding.vuln_type.value}</b> "
-                f"— <font color='{sev_color.hexval()}'><b>{finding.vuln_type.owasp_category}</b></font> "
-                f"({finding.source})"
+                f"<b>#{idx}. [{_esc(finding.severity.value)}] {_esc(finding.vuln_type.value)}</b> "
+                f"— <font color='{sev_color.hexval()}'><b>{_esc(finding.vuln_type.owasp_category)}</b></font> "
+                f"({_esc(finding.source)})"
             )
-            finding_blocks.append(Paragraph(header_text, h2_style))
 
             details_data = [
                 [
-                    Paragraph(f"<b>Endpoint:</b> {finding.endpoint}", body_style),
-                    Paragraph(f"<b>Location:</b> {finding.file}:{finding.line}", body_style),
+                    Paragraph(f"<b>Endpoint:</b> {_esc(finding.endpoint)}", body_style),
+                    Paragraph(f"<b>Location:</b> {_esc(finding.file)}:{finding.line}", body_style),
                 ]
             ]
             d_table = Table(details_data, colWidths=[250, 250])
@@ -298,13 +306,15 @@ def save_pdf_report(
                 ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F7FAFC")),
                 ("PADDING", (0, 0), (-1, -1), 3),
             ]))
-            finding_blocks.append(d_table)
+
+            # Keep header and details table together to prevent orphan titles
+            finding_blocks.append(KeepTogether([Paragraph(header_text, h2_style), d_table]))
             finding_blocks.append(Spacer(1, 4))
 
             # Code snippet box if present
             if finding.code_snippet:
                 snippet_table = Table(
-                    [[Paragraph(f"<code>{finding.code_snippet}</code>", code_style)]],
+                    [[Paragraph(f"<code>{_esc(finding.code_snippet)}</code>", code_style)]],
                     colWidths=[500]
                 )
                 snippet_table.setStyle(TableStyle([
@@ -316,19 +326,19 @@ def save_pdf_report(
                 finding_blocks.append(Spacer(1, 4))
 
             # Explanation
-            finding_blocks.append(Paragraph(f"<b>Risk Explanation:</b> {finding.explanation}", body_style))
+            finding_blocks.append(Paragraph(f"<b>Risk Explanation:</b> {_esc(finding.explanation)}", body_style))
             finding_blocks.append(Spacer(1, 3))
 
             # Fix recommendation
-            finding_blocks.append(Paragraph(f"<b>Remediation:</b> {finding.fix_recommendation}", body_style))
+            finding_blocks.append(Paragraph(f"<b>Remediation:</b> {_esc(finding.fix_recommendation)}", body_style))
 
             # Before / After patch if available
             if finding.fix_before or finding.fix_after:
                 fix_data = []
                 if finding.fix_before:
-                    fix_data.append([Paragraph("<b>Vulnerable:</b>", body_style), Paragraph(f"<code>{finding.fix_before}</code>", body_style)])
+                    fix_data.append([Paragraph("<b>Vulnerable:</b>", body_style), Paragraph(f"<code>{_esc(finding.fix_before)}</code>", body_style)])
                 if finding.fix_after:
-                    fix_data.append([Paragraph("<b>Recommended:</b>", body_style), Paragraph(f"<code>{finding.fix_after}</code>", body_style)])
+                    fix_data.append([Paragraph("<b>Recommended:</b>", body_style), Paragraph(f"<code>{_esc(finding.fix_after)}</code>", body_style)])
                 fix_table = Table(fix_data, colWidths=[90, 410])
                 fix_table.setStyle(TableStyle([
                     ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#EDF2F7")),
@@ -340,10 +350,11 @@ def save_pdf_report(
 
             if finding.reference:
                 finding_blocks.append(Spacer(1, 2))
-                finding_blocks.append(Paragraph(f"<b>Reference:</b> <font color='#2B6CB0'>{finding.reference}</font>", body_style))
+                finding_blocks.append(Paragraph(f"<b>Reference:</b> <font color='#2B6CB0'>{_esc(finding.reference)}</font>", body_style))
 
             finding_blocks.append(Spacer(1, 8))
-            story.append(KeepTogether(finding_blocks))
+            for block in finding_blocks:
+                story.append(block)
 
     # Build the document
     doc.build(story, canvasmaker=NumberedCanvas)

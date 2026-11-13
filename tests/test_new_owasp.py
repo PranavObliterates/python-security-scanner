@@ -158,3 +158,103 @@ h = hashlib.new("md5")
     assert len(findings) == 1
     assert findings[0].vuln_type == VulnerabilityType.WEAK_CRYPTO
 
+
+def test_command_injection_direct_call_detected():
+    """Ensure direct request.args.get() passed to os.system is detected."""
+    code = '''
+os.system(request.args.get("cmd"))
+'''
+    analyzer = CommandInjectionAnalyzer("/run", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.COMMAND_INJECTION
+
+
+def test_command_injection_method_transformation_detected():
+    """Ensure method chaining (e.g. .strip()) retains taint."""
+    code = '''
+user_input = request.args.get("ip")
+cleaned = user_input.strip()
+os.system(cleaned)
+'''
+    analyzer = CommandInjectionAnalyzer("/ping", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.COMMAND_INJECTION
+
+
+def test_command_injection_dict_wrapping_detected():
+    """Ensure tainted variables inside dictionaries propagate taint."""
+    code = '''
+user_input = request.args.get("ip")
+data = {"target": user_input}
+cmd = data["target"]
+os.system(cmd)
+'''
+    analyzer = CommandInjectionAnalyzer("/ping", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.COMMAND_INJECTION
+
+
+def test_path_traversal_direct_call_detected():
+    """Ensure direct open(request.args.get('file')) is detected."""
+    code = '''
+with open(request.args.get("file")) as f:
+    data = f.read()
+'''
+    analyzer = PathTraversalAnalyzer("/read", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.PATH_TRAVERSAL
+
+
+def test_path_traversal_stripped_var_detected():
+    """Ensure stripped filename retains path traversal taint."""
+    code = '''
+user_input = request.args.get("file")
+filename = user_input.strip()
+with open(filename) as f:
+    data = f.read()
+'''
+    analyzer = PathTraversalAnalyzer("/read", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.PATH_TRAVERSAL
+
+
+def test_ssrf_intermediate_variable_detected():
+    """Ensure intermediate f-string or concat URL assignment triggers SSRF."""
+    code = '''
+target = request.args.get("target")
+url = f"https://{target}"
+requests.get(url)
+'''
+    analyzer = SSRFAnalyzer("/proxy", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.SSRF
+
+
+def test_ssrf_direct_call_detected():
+    """Ensure direct requests.get(request.args.get('url')) triggers SSRF."""
+    code = '''
+requests.get(request.args.get("url"))
+'''
+    analyzer = SSRFAnalyzer("/proxy", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.SSRF
+
+
+def test_open_redirect_subscript_detected():
+    """Ensure redirect(request.args['next']) triggers OPEN_REDIRECT."""
+    code = '''
+return redirect(request.args["next"])
+'''
+    analyzer = OpenRedirectAnalyzer("/redirect", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.OPEN_REDIRECT
+
+

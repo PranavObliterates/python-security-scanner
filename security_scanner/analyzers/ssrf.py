@@ -66,6 +66,16 @@ class SSRFAnalyzer(BaseAnalyzer):
 class _SSRFVisitor(ast.NodeVisitor):
     def __init__(self, analyzer: SSRFAnalyzer):
         self.analyzer = analyzer
+        self.tainted_urls = set()
+
+    def visit_Assign(self, node: ast.Assign) -> None:
+        """Track URL variables assigned from user input."""
+        if self.analyzer._is_node_tainted(node.value, self.tainted_urls):
+            for target in node.targets:
+                var_name = self.analyzer._extract_var_name(target)
+                if var_name:
+                    self.tainted_urls.add(var_name)
+        self.generic_visit(node)
 
     def visit_Call(self, node: ast.Call) -> None:
         func_name = ""
@@ -94,29 +104,8 @@ class _SSRFVisitor(ast.NodeVisitor):
 
         if is_http_call and node.args:
             url_arg = node.args[0]
-            if isinstance(url_arg, ast.Name) and self.analyzer._is_user_input_name(url_arg.id):
-                self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), func_name, url_arg.id)
-            elif isinstance(url_arg, ast.JoinedStr):
-                for val in url_arg.values:
-                    if isinstance(val, ast.FormattedValue):
-                        var_name = self.analyzer._extract_var_name(val.value)
-                        if var_name and self.analyzer._is_user_input_name(var_name):
-                            self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), func_name, var_name)
-                            break
-            elif isinstance(url_arg, ast.BinOp) and isinstance(url_arg.op, ast.Add):
-                vars_in_binop = self._extract_vars(url_arg)
-                for v in vars_in_binop:
-                    if self.analyzer._is_user_input_name(v):
-                        self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), func_name, v)
-                        break
+            if self.analyzer._is_node_tainted(url_arg, self.tainted_urls):
+                var_name = self.analyzer._extract_var_name(url_arg) or "url"
+                self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), func_name, var_name)
 
         self.generic_visit(node)
-
-    def _extract_vars(self, node: ast.expr) -> List[str]:
-        vars_found = []
-        if isinstance(node, ast.BinOp):
-            vars_found.extend(self._extract_vars(node.left))
-            vars_found.extend(self._extract_vars(node.right))
-        elif isinstance(node, ast.Name):
-            vars_found.append(node.id)
-        return vars_found

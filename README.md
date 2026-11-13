@@ -18,7 +18,7 @@ It generates human-friendly terminal reports, machine-readable JSON, visual HTML
 | **A01: Broken Access Control** | Open Redirects | SAST |
 | **A01: Broken Access Control** | Missing CSRF Protection | SAST (Config) |
 | **A02: Cryptographic Failures** | Hardcoded Secrets & Passwords | SAST (AST Pattern Engine) |
-| **A02: Cryptographic Failures** | Broken Hashing (MD5, SHA-1) | SAST |
+| **A02: Cryptographic Failures** | Broken Hashing (MD4, MD5, SHA-1, SHA-0) | SAST |
 | **A02: Cryptographic Failures** | Insecure Cookie Attributes | DAST (Runtime Headers) |
 | **A03: Injection** | SQL Injection (SQLi) | SAST & DAST (Simulated Payloads) |
 | **A03: Injection** | Cross-Site Scripting (Reflected XSS) | SAST & DAST (Response Reflection) |
@@ -86,8 +86,9 @@ PySecure operates via a dual-engine analysis pipeline designed for maximum speed
 
 1. **Static Analysis (SAST)**:
    - **AST Analysis Engine**: Parses Python source code into Abstract Syntax Trees using Python's native `ast` module.
-   - **Taint Propagation**: Identifies untrusted user input sources (Flask `request.args`, `request.form`, `request.json`, `request.values`, `request.data`, `request.headers`; Django `request.GET`, `request.POST`, `request.body`, `request.COOKIES`) and tracks data flow into sensitive sinks.
-   - **Dangerous Sink Detection**: Catches raw SQL interpolation, `pickle.loads()`, `os.system()` / `subprocess` shell calls, unvalidated `open()` path traversals, unvalidated HTTP calls (SSRF), unvalidated redirects, and weak cryptographic hashing (`md5`, `sha1`).
+   - **Deep Taint Propagation**: Identifies untrusted user input sources (Flask `request.args`, `request.form`, `request.json`, `request.values`, `request.data`, `request.headers`; Django `request.GET`, `request.POST`, `request.body`, `request.COOKIES`) and tracks data flow across variable assignments, method transformations (e.g. `.strip()`, `.lower()`), nested collections (dictionaries, lists, tuples), and intermediate variables into sensitive sinks.
+   - **Dangerous Sink Detection**: Catches raw SQL interpolation, `pickle.loads()`, `os.system()` / `subprocess` shell calls, unvalidated `open()` path traversals, unvalidated HTTP calls (SSRF), unvalidated redirects, and weak cryptographic hashing (`md4`, `md5`, `sha1`, `sha`).
+   - **Sanitization-Aware**: Respects defensive measures such as `werkzeug.utils.secure_filename()` and `markupsafe.escape()`, eliminating false positives on properly sanitized values.
    - **Configuration Auditing**: Inspects Flask and Django application configurations for insecure `DEBUG = True`, weak or hardcoded `SECRET_KEY`, missing `CSRF` protection, and missing security middleware.
 
 2. **Dynamic Analysis (DAST)**:
@@ -99,7 +100,7 @@ PySecure operates via a dual-engine analysis pipeline designed for maximum speed
    - **Console Output**: Instant ANSI color-coded vulnerability summaries with remediation code diffs (`fix_before` vs. `fix_after`).
    - **JSON Export**: Machine-readable format conforming to automated vulnerability management platforms and CI/CD pipelines.
    - **HTML Dashboard**: Self-contained visual report with interactive severity filtering and OWASP category mapping.
-   - **Executive PDF + Gemini AI**: Formatted PDF report combining metrics with optional session-only Google Gemini AI executive analysis and prioritized developer remediation roadmaps.
+   - **Executive PDF + Gemini AI**: Formatted PDF report with automatic XML-entity escaping for HTML/XSS code snippets, combining metrics with optional session-only Google Gemini AI executive analysis and prioritized developer remediation roadmaps.
 
 ---
 

@@ -47,14 +47,14 @@ class _WeakCryptoVisitor(ast.NodeVisitor):
         if isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name):
             if node.func.value.id == "hashlib":
                 attr_lower = node.func.attr.lower()
-                if attr_lower in ("md5", "sha1"):
+                if attr_lower in ("md5", "sha1", "sha", "md4"):
                     self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), attr_lower)
                 elif attr_lower == "new" and node.args:
                     first_arg = node.args[0]
-                    if isinstance(first_arg, ast.Constant) and str(first_arg.value).lower() in ("md5", "sha1"):
+                    if isinstance(first_arg, ast.Constant) and str(first_arg.value).lower() in ("md5", "sha1", "sha", "md4"):
                         self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), str(first_arg.value).lower())
         # Check md5() or sha1() direct call
-        elif isinstance(node.func, ast.Name) and node.func.id.lower() in ("md5", "sha1"):
+        elif isinstance(node.func, ast.Name) and node.func.id.lower() in ("md5", "sha1", "sha", "md4"):
             self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), node.func.id.lower())
 
         self.generic_visit(node)

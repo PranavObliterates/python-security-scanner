@@ -53,18 +53,13 @@ class _PathTraversalVisitor(ast.NodeVisitor):
 
     def visit_Assign(self, node: ast.Assign) -> None:
         """Track path variables assigned from user input or os.path.join."""
-        vars_in_value = self._extract_vars(node.value)
-        has_user_input = any(
-            self.analyzer._is_user_input_name(v) or v in self.tainted_paths
-            for v in vars_in_value
-        )
         is_sanitized = False
         if isinstance(node.value, ast.Call):
             call_func = self.analyzer._extract_var_name(node.value.func)
             if "secure_filename" in call_func:
                 is_sanitized = True
 
-        if has_user_input and not is_sanitized:
+        if not is_sanitized and self.analyzer._is_node_tainted(node.value, self.tainted_paths):
             for target in node.targets:
                 var_name = self.analyzer._extract_var_name(target)
                 if var_name:
@@ -86,53 +81,14 @@ class _PathTraversalVisitor(ast.NodeVisitor):
 
         if is_target and node.args:
             path_arg = node.args[0]
-            # f-string path
-            if isinstance(path_arg, ast.JoinedStr):
-                for val in path_arg.values:
-                    if isinstance(val, ast.FormattedValue):
-                        var_name = self.analyzer._extract_var_name(val.value)
-                        if var_name and (self.analyzer._is_user_input_name(var_name) or var_name in self.tainted_paths):
-                            self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), func_name, var_name)
-                            break
-            # string concat path
-            elif isinstance(path_arg, ast.BinOp) and isinstance(path_arg.op, ast.Add):
-                vars_in_binop = self._extract_vars(path_arg)
-                for v in vars_in_binop:
-                    if self.analyzer._is_user_input_name(v) or v in self.tainted_paths:
-                        self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), func_name, v)
-                        break
-            # direct user input or tainted variable
-            elif isinstance(path_arg, ast.Name):
-                if self.analyzer._is_user_input_name(path_arg.id) or path_arg.id in self.tainted_paths:
-                    self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), func_name, path_arg.id)
-            # call to path constructor or join, e.g. os.path.join(DIR, filename)
-            elif isinstance(path_arg, ast.Call):
+            is_sanitized = False
+            if isinstance(path_arg, ast.Call):
                 call_func = self.analyzer._extract_var_name(path_arg.func)
-                if "secure_filename" not in call_func:
-                    vars_in_call = self._extract_vars(path_arg)
-                    for v in vars_in_call:
-                        if self.analyzer._is_user_input_name(v) or v in self.tainted_paths:
-                            self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), func_name, v)
-                            break
+                if "secure_filename" in call_func:
+                    is_sanitized = True
+
+            if not is_sanitized and self.analyzer._is_node_tainted(path_arg, self.tainted_paths):
+                var_name = self.analyzer._extract_var_name(path_arg) or "input"
+                self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), func_name, var_name)
 
         self.generic_visit(node)
-
-    def _extract_vars(self, node: ast.expr) -> List[str]:
-        vars_found = []
-        if isinstance(node, ast.BinOp):
-            vars_found.extend(self._extract_vars(node.left))
-            vars_found.extend(self._extract_vars(node.right))
-        elif isinstance(node, ast.JoinedStr):
-            for val in node.values:
-                if isinstance(val, ast.FormattedValue):
-                    name = self.analyzer._extract_var_name(val.value)
-                    if name:
-                        vars_found.append(name)
-        elif isinstance(node, ast.Call):
-            for arg in node.args:
-                vars_found.extend(self._extract_vars(arg))
-            for kw in node.keywords:
-                vars_found.extend(self._extract_vars(kw.value))
-        elif isinstance(node, ast.Name):
-            vars_found.append(node.id)
-        return vars_found

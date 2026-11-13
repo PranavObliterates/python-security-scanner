@@ -20,6 +20,10 @@ def load_app_from_path(app_target: str):
         - "C:\\path\\to\\app.py:app"
         - "my_module.wsgi:application"
     """
+    cwd = os.getcwd()
+    if cwd not in sys.path:
+        sys.path.insert(0, cwd)
+
     file_part, var_name = app_target, None
     if ":" in app_target and not os.path.exists(app_target):
         parts = app_target.rsplit(":", 1)
@@ -45,12 +49,24 @@ def load_app_from_path(app_target: str):
 
         if app_obj is None:
             raise AttributeError(f"Could not find 'app' or 'application' object in '{file_part}'.")
+        # Handle factory functions like create_app()
+        if callable(app_obj) and not hasattr(app_obj, "route") and not hasattr(app_obj, "wsgi_app"):
+            try:
+                app_obj = app_obj()
+            except Exception:
+                pass
         return app_obj
 
     # Try standard Python module import
     try:
         mod = importlib.import_module(file_part)
-        return getattr(mod, var_name or "app", None) or getattr(mod, "application", None)
+        app_obj = getattr(mod, var_name or "app", None) or getattr(mod, "application", None)
+        if callable(app_obj) and not hasattr(app_obj, "route") and not hasattr(app_obj, "wsgi_app"):
+            try:
+                app_obj = app_obj()
+            except Exception:
+                pass
+        return app_obj
     except Exception as e:
         raise ImportError(f"Cannot load target '{app_target}': {e}")
 

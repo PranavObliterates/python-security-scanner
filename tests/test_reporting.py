@@ -207,3 +207,30 @@ class TestPDFReport:
         assert os.path.exists(out_file)
         assert os.path.getsize(out_file) > 1000
 
+    def test_pdf_report_with_xml_special_characters(self, tmp_path):
+        """PDF report must not crash when code snippets contain <script>, &, <, or >."""
+        from security_scanner.reporting.pdf_report import save_pdf_report
+        result = ScanResult(app_name="adversarial_app")
+        result.routes_scanned = 1
+        result.findings.append(Finding(
+            vuln_type=VulnerabilityType.XSS,
+            severity=Severity.CRITICAL,
+            endpoint="/xss",
+            file="app.py",
+            line=42,
+            code_snippet='return f"<script>alert(document.cookie && 1)</script>"',
+            explanation="Unescaped <script> tag & user input in response.",
+            fix_recommendation="Use escape() and disallow raw <script>.",
+            fix_before='f"<script>{payload}</script>"',
+            fix_after='escape(payload)',
+            reference="https://owasp.org/www-community/attacks/xss",
+            source="SAST",
+        ))
+        out_file = str(tmp_path / "xss_report.pdf")
+        saved = save_pdf_report(result, out_file, prompt_for_key=False)
+        assert saved == out_file
+        import os
+        assert os.path.exists(out_file)
+        assert os.path.getsize(out_file) > 1000
+
+
