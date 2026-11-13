@@ -72,8 +72,8 @@ before including it in an HTML response .
 Other Checks: It also identifies other code smells: hardcoded secrets (e.g.
 app.secret_key = "password123" ), use of debug=True in production, missing CSRF
 protection, insecure cookies, etc.
-Dynamic Testing (Request Simulation): The scanner can use Flask’s test client (or Django’s test
-framework) to make simulated HTTP requests to each endpoint with malicious payloads. For
+Dynamic Testing (Passive Request Simulation): The scanner can use Flask’s test client (or Django’s test
+framework) to make benign baseline HTTP requests to each endpoint. It never submits exploit data. For
 example, it might call /user?id=' OR '1'='1' to see if the response indicates an SQL error
 or returns data it shouldn’t. Similarly, it tries typical XSS payloads like
 <script>alert('XSS')</script> in query parameters and checks if they appear
@@ -131,8 +131,8 @@ Regex: Quick pattern matching for things like SQL keywords in strings, XSS in HT
 patterns.
 Flask/Django/FastAPI APIs: Use framework introspection to list routes. For example, Flask’s
 app.url_map or Django’s URL resolver.
-Testing Client: Use Flask’s app.test_client() (and Django’s Client ) to send fake HTTP
-requests with attack payloads.
+Testing Client: Use Flask’s app.test_client() (and Django’s Client ) for benign baseline
+requests only; source analysis identifies endpoint vulnerabilities.
 Requests library: If desired, for more complex dynamic tests (though built-in test clients are
 usually sufficient).
 Reporting: Print to console, or generate JSON/HTML reports. We can use Python’s built-in
@@ -854,11 +854,8 @@ security_scanner/
 │   └── config.py            # Debug mode, cookie flags, headers
 ├── dynamic/
 │   ├── __init__.py
-│   ├── payload_tester.py    # Sends attack payloads via test client
-│   ├── response_analyzer.py # Checks responses for vulnerabilities
-│   └── payloads/
-│       ├── sqli_payloads.txt
-│       └── xss_payloads.txt
+│   ├── payload_tester.py    # Makes benign baseline requests only
+│   └── response_analyzer.py # Checks headers and cookie attributes
 ├── reporting/
 │   ├── __init__.py
 │   ├── console.py           # Rich terminal output
@@ -1594,29 +1591,8 @@ class _XSSVisitor(ast.NodeVisitor):
 - [ ] **Step 27:** Implement `analyzers/config.py` — detect `debug=True`, missing CSRF, insecure cookie flags
 
 #### Dynamic Testing
-- [ ] **Step 28:** Create `dynamic/payloads/sqli_payloads.txt`:
-
-```text name=security_scanner/dynamic/payloads/sqli_payloads.txt
-' OR '1'='1
-' OR '1'='1' --
-" OR "1"="1
-'; DROP TABLE users; --
-' UNION SELECT NULL, NULL --
-1 OR 1=1
-' OR 'a'='a
-```
-
-- [ ] **Step 29:** Create `dynamic/payloads/xss_payloads.txt`:
-
-```text name=security_scanner/dynamic/payloads/xss_payloads.txt
-<script>alert('XSS')</script>
-<img src=x onerror=alert('XSS')>
-<svg onload=alert('XSS')>
-"><script>alert('XSS')</script>
-'><script>alert('XSS')</script>
-javascript:alert('XSS')
-<body onload=alert('XSS')>
-```
+- [x] **Step 28:** Use framework test clients for benign baseline requests only.
+- [x] **Step 29:** Report endpoint source-to-sink findings and deterministic remediation from SAST; do not generate or send exploit payloads.
 
 - [ ] **Step 30:** Implement `dynamic/payload_tester.py` — send payloads via Flask `test_client()`:
 

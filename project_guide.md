@@ -17,11 +17,8 @@ python_security_scanner_library_project/
 │   │   ├── secrets.py
 │   │   └── config.py
 │   ├── dynamic/               ← DAST (runtime testing)
-│   │   ├── payload_tester.py
-│   │   ├── response_analyzer.py
-│   │   └── payloads/
-│   │       ├── sqli_payloads.txt
-│   │       └── xss_payloads.txt
+│   │   ├── payload_tester.py    (passive baseline checks)
+│   │   └── response_analyzer.py
 │   ├── models/                ← Data structures
 │   │   ├── finding.py
 │   │   └── scan_result.py
@@ -99,14 +96,12 @@ These read your **source code** without running the app. They look for vulnerabl
 
 ### `dynamic/` — DAST (Dynamic Testing)
 
-These **actually run your app** in a test server and send attack payloads to it.
+These run your app through its framework test client and make only benign baseline requests.
 
 | File | What it does |
 |------|-------------|
-| **[payload_tester.py](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/security_scanner/dynamic/payload_tester.py)** | Spins up your Flask/Django app on a local test server, then sends real HTTP requests with malicious payloads (SQL injection strings, XSS scripts) to every discovered endpoint. |
-| **[response_analyzer.py](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/security_scanner/dynamic/response_analyzer.py)** | Analyzes the HTTP responses from DAST. Checks if the payload was reflected back (XSS), if SQL errors appeared (SQLi), etc. |
-| **[payloads/sqli_payloads.txt](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/security_scanner/dynamic/payloads/sqli_payloads.txt)** | List of SQL injection attack strings (e.g., `' OR 1=1 --`, `'; DROP TABLE users--`). |
-| **[payloads/xss_payloads.txt](file:///c:/Users/prana/Downloads/python_security_scanner_library_project/security_scanner/dynamic/payloads/xss_payloads.txt)** | List of XSS attack strings (e.g., `<script>alert(1)</script>`). |
+| **[payload_tester.py](security_scanner/dynamic/payload_tester.py)** | Makes safe baseline requests and reports unexpected server errors without submitting exploit input. |
+| **[response_analyzer.py](security_scanner/dynamic/response_analyzer.py)** | Checks response headers and cookie security attributes. |
 
 ---
 
@@ -187,7 +182,7 @@ flowchart LR
     B --> C["security_scanner/\ncore/scanner.py"]
     C --> D["route_discovery.py\n(finds all endpoints)"]
     C --> E["SAST Analyzers\n(read source code)"]
-    C --> F["DAST Tester\n(send attack payloads)"]
+    C --> F["DAST Tester\n(benign baseline checks)"]
     E --> G["Findings"]
     F --> G
     G --> H["Reports\n(console / JSON / HTML)"]
