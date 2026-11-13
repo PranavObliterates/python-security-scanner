@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![OWASP Top 10](https://img.shields.io/badge/OWASP-Top%2010%20(2021)-orange.svg)](https://owasp.org/Top10/)
 
-**PySecure** is an embedded security scanner for Python web applications (Flask & Django). It shifts security testing left by running both **Static Application Security Testing (SAST)** via AST analysis and **Dynamic Application Security Testing (DAST)** via in-memory simulated attacks right during development and CI/CD pipelines.
+**PySecure** is an embedded security scanner for Python web applications (**Flask, Django, and FastAPI**). It shifts security testing left by running both **Static Application Security Testing (SAST)** via AST analysis and **Dynamic Application Security Testing (DAST)** via in-memory simulated attacks right during development and CI/CD pipelines.
 
 It generates human-friendly terminal reports, machine-readable JSON, visual HTML dashboards, and **executive PDF reports powered by Google Gemini AI**.
 
@@ -25,6 +25,7 @@ It generates human-friendly terminal reports, machine-readable JSON, visual HTML
 | **A03: Injection** | Command Injection (RCE) | SAST |
 | **A03: Injection** | Server-Side Template Injection (SSTI) | SAST & DAST |
 | **A05: Security Misconfiguration** | Debug Mode Enabled | SAST (Global Config) |
+| **A05: Security Misconfiguration** | CORS Wildcard with Credentials | SAST (Global Config) |
 | **A05: Security Misconfiguration** | Missing Security Headers (CSP, HSTS, X-Frame) | DAST |
 | **A08: Software & Data Integrity** | Insecure Deserialization (pickle, PyYAML) | SAST & DAST |
 | **A10: Server-Side Request Forgery** | SSRF (Unchecked HTTP requests) | SAST |
@@ -110,7 +111,7 @@ PySecure operates via a dual-engine analysis pipeline designed for maximum speed
 ```python
 from pysecure import scan_app, save_pdf_report
 
-# Scan your Flask or Django app
+# Scan your Flask, Django, or FastAPI app
 result = scan_app(app, dynamic=True)
 
 # Generate AI-powered PDF report (prompts for session-only Gemini API key)

@@ -1,9 +1,10 @@
 """Main scanner orchestrator — ties everything together."""
 import time
+import re
 from typing import List
 from ..models.finding import Finding, Severity, VulnerabilityType
 from ..models.scan_result import ScanResult
-from .route_discovery import discover_flask_routes, discover_django_routes
+from .route_discovery import discover_flask_routes, discover_django_routes, discover_fastapi_routes
 from ..analyzers.sql_injection import SQLInjectionAnalyzer
 from ..analyzers.xss import XSSAnalyzer
 from ..analyzers.secrets import SecretsAnalyzer
@@ -14,8 +15,8 @@ from ..analyzers.path_traversal import PathTraversalAnalyzer
 from ..analyzers.ssrf import SSRFAnalyzer
 from ..analyzers.weak_crypto import WeakCryptoAnalyzer
 from ..analyzers.open_redirect import OpenRedirectAnalyzer
-from ..analyzers.config import check_flask_config, check_django_config
-from ..dynamic.payload_tester import run_dast_tests, run_django_dast_tests
+from ..analyzers.config import check_flask_config, check_django_config, check_fastapi_config
+from ..dynamic.payload_tester import run_dast_tests, run_django_dast_tests, run_fastapi_dast_tests
 from ..dynamic.response_analyzer import check_security_headers, check_cookie_security
 
 
@@ -50,6 +51,8 @@ def scan_app(app, dynamic: bool = True, framework: str = "auto") -> ScanResult:
         routes = discover_flask_routes(app)
     elif detected_framework == "django":
         routes = discover_django_routes()
+    elif detected_framework == "fastapi":
+        routes = discover_fastapi_routes(app)
     else:
         raise NotImplementedError(f"Framework '{detected_framework}' not yet supported.")
 
@@ -78,6 +81,8 @@ def scan_app(app, dynamic: bool = True, framework: str = "auto") -> ScanResult:
         result.findings.extend(check_flask_config(app))
     elif detected_framework == "django":
         result.findings.extend(check_django_config())
+    elif detected_framework == "fastapi":
+        result.findings.extend(check_fastapi_config(app))
 
     # Step 4: Dynamic Analysis (DAST)
     if dynamic:
@@ -122,6 +127,30 @@ def scan_app(app, dynamic: bool = True, framework: str = "auto") -> ScanResult:
                     except Exception:
                         continue
 
+            elif detected_framework == "fastapi":
+                dast_findings = run_fastapi_dast_tests(app, routes)
+                result.findings.extend(dast_findings)
+
+                try:
+                    from fastapi.testclient import TestClient
+                    client = TestClient(app)
+                    for route in routes[:3]:
+                        try:
+                            clean_path = re.sub(r"\{(\w+)\}", "1", route.path)
+                            response = client.get(clean_path)
+                            headers = dict(response.headers)
+                            result.findings.extend(
+                                check_security_headers(headers, route.path)
+                            )
+                            result.findings.extend(
+                                check_cookie_security(headers, route.path)
+                            )
+                            break
+                        except Exception:
+                            continue
+                except Exception:
+                    pass
+
         except Exception:
             # DAST errors shouldn't crash the scan
             pass
@@ -147,12 +176,15 @@ def _detect_framework(app) -> str:
     else:
         raise ValueError(
             f"Cannot detect framework from {type(app).__name__} ({module}). "
-            f"Currently supported: Flask, Django."
+            f"Currently supported: Flask, Django, FastAPI."
         )
 
 
 def _get_app_name(app) -> str:
     """Get a readable name for the application."""
+    # FastAPI / Starlette
+    if hasattr(app, "title") and isinstance(app.title, str):
+        return app.title
     # Flask
     if hasattr(app, "import_name"):
         return app.import_name

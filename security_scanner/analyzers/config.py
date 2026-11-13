@@ -116,6 +116,7 @@ def check_flask_config(app) -> List[Finding]:
     return findings
 
 
+
 def check_django_config(settings=None) -> List[Finding]:
     """Run all configuration checks on a Django project.
 
@@ -243,4 +244,65 @@ def check_django_config(settings=None) -> List[Finding]:
         ))
 
     return findings
+
+
+def check_fastapi_config(app) -> List[Finding]:
+    """Run configuration security checks on a FastAPI or Starlette application.
+
+    Checks:
+    1. Debug mode enabled in production
+    2. CORS wildcard with credentials enabled (Same-Origin Policy bypass)
+    """
+    findings = []
+
+    # Check 1: Debug mode
+    if getattr(app, "debug", False):
+        findings.append(Finding(
+            vuln_type=VulnerabilityType.DEBUG_MODE,
+            severity=Severity.HIGH,
+            endpoint="(global config)",
+            file="app configuration",
+            line=0,
+            code_snippet="FastAPI(debug=True)",
+            explanation=(
+                "Debug mode is enabled in FastAPI. Unhandled exceptions will expose "
+                "detailed internal stack traces, system paths, and source code."
+            ),
+            fix_recommendation="Disable debug mode in production: FastAPI(debug=False).",
+            fix_before="FastAPI(debug=True)",
+            fix_after="FastAPI(debug=False)",
+            reference="https://fastapi.tiangolo.com/tutorial/debugging/",
+            source="SAST",
+        ))
+
+    # Check 2: CORS wildcard with credentials
+    for middleware in getattr(app, "user_middleware", []):
+        cls = getattr(middleware, "cls", None)
+        if cls and "CORSMiddleware" in getattr(cls, "__name__", ""):
+            kwargs = getattr(middleware, "kwargs", {})
+            allow_origins = kwargs.get("allow_origins", [])
+            allow_credentials = kwargs.get("allow_credentials", False)
+            if ("*" in allow_origins or allow_origins == ["*"]) and allow_credentials:
+                findings.append(Finding(
+                    vuln_type=VulnerabilityType.CORS_MISCONFIGURATION,
+                    severity=Severity.HIGH,
+                    endpoint="(global config)",
+                    file="app configuration",
+                    line=0,
+                    code_snippet='CORSMiddleware(allow_origins=["*"], allow_credentials=True)',
+                    explanation=(
+                        "CORS is configured with allow_origins=['*'] and allow_credentials=True. "
+                        "This configuration allows any external origin to make authenticated requests "
+                        "using cookies/credentials, completely bypassing the Same-Origin Policy."
+                    ),
+                    fix_recommendation="Specify exact trusted domains in allow_origins instead of wildcard '*' when credentials are required.",
+                    fix_before='CORSMiddleware(allow_origins=["*"], allow_credentials=True)',
+                    fix_after='CORSMiddleware(allow_origins=["https://yourdomain.com"], allow_credentials=True)',
+                    reference="https://owasp.org/www-community/attacks/CORS_OriginHeaderScrutiny",
+                    source="SAST",
+                ))
+
+    return findings
+
+
 

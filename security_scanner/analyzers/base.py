@@ -28,6 +28,12 @@ class BaseAnalyzer(ABC):
         self.source_code = textwrap.dedent(source_code)
         self.findings: List[Finding] = []
         self._tree: ast.Module = ast.parse(self.source_code)
+        self._func_args = set()
+        for node in ast.iter_child_nodes(self._tree):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                for arg in node.args.args:
+                    if arg.arg not in ("self", "cls", "request"):
+                        self._func_args.add(arg.arg)
 
     @abstractmethod
     def analyze(self) -> List[Finding]:
@@ -59,6 +65,9 @@ class BaseAnalyzer(ABC):
                 return False
 
         if re.search(rf"\b{escaped}\s*=\s*.*request\.", self.source_code):
+            return True
+
+        if name in self._func_args:
             return True
 
         for pattern in USER_INPUT_SOURCES:

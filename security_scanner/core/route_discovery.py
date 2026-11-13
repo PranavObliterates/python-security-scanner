@@ -120,3 +120,49 @@ def discover_django_routes(urlconf=None) -> List[RouteInfo]:
     _walk_patterns(resolver.url_patterns)
     return routes
 
+
+def discover_fastapi_routes(app) -> List[RouteInfo]:
+    """Extract all routes from a FastAPI or Starlette application.
+
+    Iterates over app.routes to find all registered endpoints,
+    retrieves the view function for each, and extracts its source code.
+    """
+    routes = []
+    for route in getattr(app, "routes", []):
+        endpoint = getattr(route, "endpoint", None)
+        path = getattr(route, "path", None)
+        if not endpoint or not path:
+            continue
+        # Skip automatic docs and openapi schema endpoints
+        if path in ("/docs", "/redoc", "/openapi.json"):
+            continue
+
+        try:
+            source = inspect.getsource(endpoint)
+            file_path = inspect.getfile(endpoint)
+        except (OSError, TypeError):
+            try:
+                unwrapped = inspect.unwrap(endpoint)
+                source = inspect.getsource(unwrapped)
+                file_path = inspect.getfile(unwrapped)
+            except (OSError, TypeError):
+                source = None
+                file_path = None
+
+        methods = getattr(route, "methods", None)
+        if methods:
+            clean_methods = sorted(set(methods) - {"HEAD", "OPTIONS"})
+        else:
+            clean_methods = ["GET"]
+
+        routes.append(RouteInfo(
+            path=path,
+            methods=clean_methods,
+            view_function=endpoint,
+            view_function_name=getattr(endpoint, "__name__", str(endpoint)),
+            file_path=file_path,
+            source_code=source,
+        ))
+
+    return routes
+

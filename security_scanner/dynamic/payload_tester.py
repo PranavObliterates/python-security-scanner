@@ -18,13 +18,16 @@ def load_payloads(filename: str) -> List[str]:
 
 
 def _extract_param_names(path: str) -> List[str]:
-    """Extract parameter names from a Flask route rule.
+    """Extract parameter names from a Flask or FastAPI route rule.
 
     E.g., '/user/<id>' -> ['id']
+    E.g., '/user/{id}' -> ['id']
     E.g., '/user' -> ['id', 'q', 'name', 'search', 'input']  (common defaults)
     """
-    # Find named parameters in angle brackets
+    # Find named parameters in angle brackets (Flask) or braces (FastAPI)
     params = re.findall(r"<(?:\w+:)?(\w+)>", path)
+    if not params:
+        params = re.findall(r"\{(\w+)\}", path)
     if params:
         return params
     # If no path params, use common query parameter names
@@ -403,3 +406,98 @@ def _test_deserialization(client, path: str, methods: List[str], param_names: Li
         except Exception:
             pass
     return findings
+
+
+def run_fastapi_dast_tests(app, routes) -> List[Finding]:
+    """Run dynamic tests against a FastAPI application using TestClient."""
+    try:
+        from fastapi.testclient import TestClient
+    except ImportError:
+        try:
+            from starlette.testclient import TestClient
+        except ImportError:
+            return []
+
+    findings = []
+    try:
+        client = TestClient(app)
+    except Exception:
+        return []
+
+    for route in routes:
+        path = route.path
+        methods = route.methods
+        param_names = _extract_param_names(path)
+
+        clean_path = re.sub(r"<(?:\w+:)?(\w+)>", "1", path)
+        clean_path = re.sub(r"\{(\w+)\}", "1", clean_path)
+
+        # SQL Injection
+        sqli_payloads = load_payloads("sqli_payloads.txt")
+        for param in param_names:
+            found_sqli = False
+            for payload in sqli_payloads:
+                if found_sqli:
+                    break
+                try:
+                    if "GET" in methods:
+                        resp = client.get(f"{clean_path}?{param}={payload}")
+                        if check_response_for_sqli(resp.text):
+                            findings.append(Finding(
+                                vuln_type=VulnerabilityType.SQL_INJECTION,
+                                severity=Severity.CRITICAL,
+                                endpoint=path,
+                                file="(dynamic test)",
+                                line=0,
+                                code_snippet=f"GET {path}?{param}={payload}",
+                                explanation=(
+                                    f"Sending payload '{payload}' as parameter '{param}' "
+                                    f"caused a database error in the response, confirming "
+                                    f"SQL injection is possible."
+                                ),
+                                fix_recommendation="Use parameterized queries instead of string interpolation.",
+                                fix_before=f'cursor.execute(f"SELECT ... WHERE col = {{{param}}}")',
+                                fix_after=f'cursor.execute("SELECT ... WHERE col = %s", ({param},))',
+                                reference="https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
+                                source="DAST",
+                                confidence="HIGH",
+                            ))
+                            found_sqli = True
+                except Exception:
+                    continue
+
+        # XSS
+        xss_payloads = load_payloads("xss_payloads.txt")
+        for param in param_names:
+            found_xss = False
+            for payload in xss_payloads:
+                if found_xss:
+                    break
+                try:
+                    if "GET" in methods:
+                        resp = client.get(f"{clean_path}?{param}={payload}")
+                        if check_response_for_xss(resp.text, payload):
+                            findings.append(Finding(
+                                vuln_type=VulnerabilityType.XSS,
+                                severity=Severity.CRITICAL,
+                                endpoint=path,
+                                file="(dynamic test)",
+                                line=0,
+                                code_snippet=f"GET {path}?{param}={payload[:60]}",
+                                explanation=(
+                                    f"XSS payload '{payload[:40]}...' sent as parameter '{param}' "
+                                    f"was reflected unescaped in the response."
+                                ),
+                                fix_recommendation="Sanitize or escape all user input before including in responses.",
+                                fix_before=f'HTMLResponse(f"...{{{param}}}...")',
+                                fix_after=f'import html\nHTMLResponse(f"...{{html.escape({param})}}...")',
+                                reference="https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html",
+                                source="DAST",
+                                confidence="HIGH",
+                            ))
+                            found_xss = True
+                except Exception:
+                    continue
+
+    return findings
+

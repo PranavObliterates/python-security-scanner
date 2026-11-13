@@ -1,13 +1,13 @@
 {
-  "scan_date": "2026-11-13 20:26:20",
+  "scan_date": "2026-11-13 23:01:50",
   "app_name": "django.core.handlers.wsgi",
   "routes_scanned": 28,
-  "scan_duration_seconds": 6.128,
+  "scan_duration_seconds": 22.626,
   "summary": {
-    "total_issues": 25,
-    "critical": 9,
+    "total_issues": 26,
+    "critical": 8,
     "high": 2,
-    "medium": 14,
+    "medium": 16,
     "low": 0
   },
   "findings": [
@@ -73,6 +73,20 @@
       "source": "SAST",
       "endpoint": "/admin/auth/group/<path:object_id>/",
       "file": "C:\\Users\\prana\\AppData\\Roaming\\Python\\Python313\\site-packages\\django\\views\\generic\\base.py",
+      "line": 31,
+      "code": "return HttpResponsePermanentRedirect(url)",
+      "explanation": "Application redirects users to a target specified by user input 'url' without validation. An attacker can construct links redirecting users to malicious phishing domains while appearing legitimate.",
+      "fix": "Validate redirect targets against an allowed whitelist or verify that the URL is relative (e.g., using urllib.parse.urlparse and checking netloc is empty).",
+      "fix_before": "redirect(url)",
+      "fix_after": "from urllib.parse import urlparse\nif not urlparse(url).netloc:\n    return redirect(url)\nreturn redirect(\"/\")",
+      "reference": "https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html"
+    },
+    {
+      "type": "OPEN_REDIRECT",
+      "severity": "MEDIUM",
+      "source": "SAST",
+      "endpoint": "/admin/auth/group/<path:object_id>/",
+      "file": "C:\\Users\\prana\\AppData\\Roaming\\Python\\Python313\\site-packages\\django\\views\\generic\\base.py",
       "line": 33,
       "code": "return HttpResponseRedirect(url)",
       "explanation": "Application redirects users to a target specified by user input 'url' without validation. An attacker can construct links redirecting users to malicious phishing domains while appearing legitimate.",
@@ -93,20 +107,6 @@
       "fix": "Validate redirect targets against an allowed whitelist or verify that the URL is relative (e.g., using urllib.parse.urlparse and checking netloc is empty).",
       "fix_before": "redirect(request.get_full_path)",
       "fix_after": "from urllib.parse import urlparse\nif not urlparse(request.get_full_path).netloc:\n    return redirect(request.get_full_path)\nreturn redirect(\"/\")",
-      "reference": "https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html"
-    },
-    {
-      "type": "OPEN_REDIRECT",
-      "severity": "MEDIUM",
-      "source": "SAST",
-      "endpoint": "/admin/auth/user/<id>/password/",
-      "file": "C:\\Users\\prana\\AppData\\Roaming\\Python\\Python313\\site-packages\\django\\utils\\decorators.py",
-      "line": 40,
-      "code": "return HttpResponseRedirect(",
-      "explanation": "Application redirects users to a target specified by user input 'reverse' without validation. An attacker can construct links redirecting users to malicious phishing domains while appearing legitimate.",
-      "fix": "Validate redirect targets against an allowed whitelist or verify that the URL is relative (e.g., using urllib.parse.urlparse and checking netloc is empty).",
-      "fix_before": "redirect(reverse)",
-      "fix_after": "from urllib.parse import urlparse\nif not urlparse(reverse).netloc:\n    return redirect(reverse)\nreturn redirect(\"/\")",
       "reference": "https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html"
     },
     {
@@ -157,12 +157,40 @@
       "source": "SAST",
       "endpoint": "/admin/auth/user/<path:object_id>/",
       "file": "C:\\Users\\prana\\AppData\\Roaming\\Python\\Python313\\site-packages\\django\\views\\generic\\base.py",
+      "line": 31,
+      "code": "return HttpResponsePermanentRedirect(url)",
+      "explanation": "Application redirects users to a target specified by user input 'url' without validation. An attacker can construct links redirecting users to malicious phishing domains while appearing legitimate.",
+      "fix": "Validate redirect targets against an allowed whitelist or verify that the URL is relative (e.g., using urllib.parse.urlparse and checking netloc is empty).",
+      "fix_before": "redirect(url)",
+      "fix_after": "from urllib.parse import urlparse\nif not urlparse(url).netloc:\n    return redirect(url)\nreturn redirect(\"/\")",
+      "reference": "https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html"
+    },
+    {
+      "type": "OPEN_REDIRECT",
+      "severity": "MEDIUM",
+      "source": "SAST",
+      "endpoint": "/admin/auth/user/<path:object_id>/",
+      "file": "C:\\Users\\prana\\AppData\\Roaming\\Python\\Python313\\site-packages\\django\\views\\generic\\base.py",
       "line": 33,
       "code": "return HttpResponseRedirect(url)",
       "explanation": "Application redirects users to a target specified by user input 'url' without validation. An attacker can construct links redirecting users to malicious phishing domains while appearing legitimate.",
       "fix": "Validate redirect targets against an allowed whitelist or verify that the URL is relative (e.g., using urllib.parse.urlparse and checking netloc is empty).",
       "fix_before": "redirect(url)",
       "fix_after": "from urllib.parse import urlparse\nif not urlparse(url).netloc:\n    return redirect(url)\nreturn redirect(\"/\")",
+      "reference": "https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html"
+    },
+    {
+      "type": "OPEN_REDIRECT",
+      "severity": "MEDIUM",
+      "source": "SAST",
+      "endpoint": "/admin/(?P<url>.*)",
+      "file": "C:\\Users\\prana\\AppData\\Roaming\\Python\\Python313\\site-packages\\django\\contrib\\admin\\sites.py",
+      "line": 11,
+      "code": "return HttpResponsePermanentRedirect(",
+      "explanation": "Application redirects users to a target specified by user input 'request.get_full_path' without validation. An attacker can construct links redirecting users to malicious phishing domains while appearing legitimate.",
+      "fix": "Validate redirect targets against an allowed whitelist or verify that the URL is relative (e.g., using urllib.parse.urlparse and checking netloc is empty).",
+      "fix_before": "redirect(request.get_full_path)",
+      "fix_after": "from urllib.parse import urlparse\nif not urlparse(request.get_full_path).netloc:\n    return redirect(request.get_full_path)\nreturn redirect(\"/\")",
       "reference": "https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html"
     },
     {
@@ -248,20 +276,6 @@
       "fix_before": "SECRET_KEY = \"django-insecure-dumm...\"",
       "fix_after": "import os\nSECRET_KEY = os.environ.get(\"DJANGO_SECRET_KEY\")",
       "reference": "https://docs.djangoproject.com/en/stable/ref/settings/#secret-key"
-    },
-    {
-      "type": "SSTI",
-      "severity": "CRITICAL",
-      "source": "DAST",
-      "endpoint": "/admin/login/",
-      "file": "(dynamic test)",
-      "line": 0,
-      "code": "GET /admin/login/?search={{ 7|add:7 }}",
-      "explanation": "SSTI payload '{{ 7|add:7 }}' sent as parameter 'search' was evaluated to '14', confirming Server-Side Template Injection.",
-      "fix": "Do not dynamically evaluate user input as templates.",
-      "fix_before": "",
-      "fix_after": "",
-      "reference": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Template_Injection_Prevention_Cheat_Sheet.html"
     },
     {
       "type": "SQL_INJECTION",
