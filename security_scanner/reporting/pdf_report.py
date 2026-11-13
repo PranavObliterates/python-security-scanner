@@ -336,9 +336,9 @@ def save_pdf_report(
             if finding.fix_before or finding.fix_after:
                 fix_data = []
                 if finding.fix_before:
-                    fix_data.append([Paragraph("<b>Vulnerable:</b>", body_style), Paragraph(f"<code>{_esc(finding.fix_before)}</code>", body_style)])
+                    fix_data.append([Paragraph("<b>Vulnerable:</b>", body_style), Paragraph(f"<code>{_esc(finding.fix_before).replace(chr(10), '<br/>')}</code>", body_style)])
                 if finding.fix_after:
-                    fix_data.append([Paragraph("<b>Recommended:</b>", body_style), Paragraph(f"<code>{_esc(finding.fix_after)}</code>", body_style)])
+                    fix_data.append([Paragraph("<b>Recommended:</b>", body_style), Paragraph(f"<code>{_esc(finding.fix_after).replace(chr(10), '<br/>')}</code>", body_style)])
                 fix_table = Table(fix_data, colWidths=[90, 410])
                 fix_table.setStyle(TableStyle([
                     ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#EDF2F7")),
