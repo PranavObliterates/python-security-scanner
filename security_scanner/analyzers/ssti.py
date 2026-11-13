@@ -32,6 +32,11 @@ class _SSTIVisitor(ast.NodeVisitor):
 
     def visit_Call(self, node: ast.Call) -> None:
         """Flag usage of render_template_string when the argument is dynamic."""
+        if isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name) and node.func.value.id == "string":
+            # string.Template is safe standard library formatting, not SSTI
+            self.generic_visit(node)
+            return
+
         if isinstance(node.func, ast.Name):
             func_name = node.func.id
         elif isinstance(node.func, ast.Attribute):
@@ -43,7 +48,7 @@ class _SSTIVisitor(ast.NodeVisitor):
             if node.args:
                 arg = node.args[0]
                 is_dynamic = False
-                if isinstance(arg, (ast.JoinedStr, ast.BinOp, ast.Call)):
+                if isinstance(arg, (ast.JoinedStr, ast.BinOp, ast.Call, ast.Subscript)):
                     is_dynamic = True
                 elif isinstance(arg, ast.Name):
                     var_name = arg.id

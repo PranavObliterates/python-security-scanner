@@ -4,7 +4,7 @@ from typing import List
 from .base import BaseAnalyzer
 from ..models.finding import Finding, Severity, VulnerabilityType
 
-HTTP_CLIENT_MODULES = {"requests", "httpx", "urllib", "http", "aiohttp", "session", "client"}
+HTTP_CLIENT_MODULES = {"requests", "httpx", "urllib", "urllib3", "http", "aiohttp", "session", "client"}
 HTTP_METHODS = {"get", "post", "put", "delete", "request", "patch", "head"}
 
 HTTP_CALLS = {

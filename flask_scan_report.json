@@ -1,8 +1,8 @@
 {
-  "scan_date": "2026-11-13 16:59:26",
+  "scan_date": "2026-11-13 20:25:54",
   "app_name": "examples.vulnerable_flask_app",
   "routes_scanned": 9,
-  "scan_duration_seconds": 0.931,
+  "scan_duration_seconds": 1.013,
   "summary": {
     "total_issues": 29,
     "critical": 21,

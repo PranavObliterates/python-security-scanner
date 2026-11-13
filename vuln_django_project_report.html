@@ -60,9 +60,9 @@
             <p><strong>Application:</strong> django.core.handlers.wsgi</p>
             <div class="stats">
                 <div class="stat">📍 Routes: 28</div>
-                <div class="stat">🔍 Issues: 13</div>
-                <div class="stat">⏱️ Time: 12.480s</div>
-                <div class="stat">📅 2026-11-13 16:58</div>
+                <div class="stat">🔍 Issues: 25</div>
+                <div class="stat">⏱️ Time: 6.128s</div>
+                <div class="stat">📅 2026-11-13 20:26</div>
             </div>
         </div>
 
@@ -71,13 +71,13 @@
                 All
             </button>
             <button id="btn-critical" class="summary-badge" style="background:#dc3545;" onclick="filterSeverity('critical')">
-                8 Critical
+                9 Critical
             </button>
             <button id="btn-high" class="summary-badge" style="background:#fd7e14;" onclick="filterSeverity('high')">
                 2 High
             </button>
             <button id="btn-medium" class="summary-badge" style="background:#ffc107;color:#333;" onclick="filterSeverity('medium')">
-                3 Medium
+                14 Medium
             </button>
             <button id="btn-low" class="summary-badge" style="background:#17a2b8;" onclick="filterSeverity('low')">
                 0 Low
@@ -85,6 +85,413 @@
         </div>
 
         
+        <div class="finding medium" style="border:1px solid #e0e0e0;border-left:4px solid #ffc107;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#ffc107;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    MEDIUM
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
+                <span style="margin-left:auto;color:#888;">#1</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">OPEN_REDIRECT</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/admin/r/<path:content_type_id>/<path:object_id>/</strong>
+                 (line 78)
+                → C:\Users\prana\AppData\Roaming\Python\Python313\site-packages\django\contrib\admin\sites.py
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                return HttpResponseRedirect(&quot;%s://%s%s&quot; % (protocol, object_domain, absurl))
+            </div>
+            <p><strong>⚠️ Why:</strong> Application redirects users to a target specified by user input &#x27;url&#x27; without validation. An attacker can construct links redirecting users to malicious phishing domains while appearing legitimate.</p>
+            <p><strong>✅ Fix:</strong> Validate redirect targets against an allowed whitelist or verify that the URL is relative (e.g., using urllib.parse.urlparse and checking netloc is empty).</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>redirect(url)</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>from urllib.parse import urlparse
+if not urlparse(url).netloc:
+    return redirect(url)
+return redirect(&quot;/&quot;)</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div class="finding medium" style="border:1px solid #e0e0e0;border-left:4px solid #ffc107;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#ffc107;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    MEDIUM
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
+                <span style="margin-left:auto;color:#888;">#2</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">OPEN_REDIRECT</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/admin/auth/group/</strong>
+                 (line 28)
+                → C:\Users\prana\AppData\Roaming\Python\Python313\site-packages\django\contrib\admin\options.py
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                return HttpResponseRedirect(request.path + &quot;?&quot; + ERROR_FLAG + &quot;=1&quot;)
+            </div>
+            <p><strong>⚠️ Why:</strong> Application redirects users to a target specified by user input &#x27;url&#x27; without validation. An attacker can construct links redirecting users to malicious phishing domains while appearing legitimate.</p>
+            <p><strong>✅ Fix:</strong> Validate redirect targets against an allowed whitelist or verify that the URL is relative (e.g., using urllib.parse.urlparse and checking netloc is empty).</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>redirect(url)</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>from urllib.parse import urlparse
+if not urlparse(url).netloc:
+    return redirect(url)
+return redirect(&quot;/&quot;)</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div class="finding medium" style="border:1px solid #e0e0e0;border-left:4px solid #ffc107;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#ffc107;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    MEDIUM
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
+                <span style="margin-left:auto;color:#888;">#3</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">OPEN_REDIRECT</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/admin/auth/group/</strong>
+                 (line 82)
+                → C:\Users\prana\AppData\Roaming\Python\Python313\site-packages\django\contrib\admin\options.py
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                return HttpResponseRedirect(request.get_full_path())
+            </div>
+            <p><strong>⚠️ Why:</strong> Application redirects users to a target specified by user input &#x27;request.get_full_path&#x27; without validation. An attacker can construct links redirecting users to malicious phishing domains while appearing legitimate.</p>
+            <p><strong>✅ Fix:</strong> Validate redirect targets against an allowed whitelist or verify that the URL is relative (e.g., using urllib.parse.urlparse and checking netloc is empty).</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>redirect(request.get_full_path)</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>from urllib.parse import urlparse
+if not urlparse(request.get_full_path).netloc:
+    return redirect(request.get_full_path)
+return redirect(&quot;/&quot;)</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div class="finding medium" style="border:1px solid #e0e0e0;border-left:4px solid #ffc107;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#ffc107;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    MEDIUM
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
+                <span style="margin-left:auto;color:#888;">#4</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">OPEN_REDIRECT</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/admin/auth/group/</strong>
+                 (line 124)
+                → C:\Users\prana\AppData\Roaming\Python\Python313\site-packages\django\contrib\admin\options.py
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                return HttpResponseRedirect(request.get_full_path())
+            </div>
+            <p><strong>⚠️ Why:</strong> Application redirects users to a target specified by user input &#x27;request.get_full_path&#x27; without validation. An attacker can construct links redirecting users to malicious phishing domains while appearing legitimate.</p>
+            <p><strong>✅ Fix:</strong> Validate redirect targets against an allowed whitelist or verify that the URL is relative (e.g., using urllib.parse.urlparse and checking netloc is empty).</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>redirect(request.get_full_path)</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>from urllib.parse import urlparse
+if not urlparse(request.get_full_path).netloc:
+    return redirect(request.get_full_path)
+return redirect(&quot;/&quot;)</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div class="finding medium" style="border:1px solid #e0e0e0;border-left:4px solid #ffc107;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#ffc107;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    MEDIUM
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
+                <span style="margin-left:auto;color:#888;">#5</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">OPEN_REDIRECT</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/admin/auth/group/<path:object_id>/</strong>
+                 (line 33)
+                → C:\Users\prana\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                return HttpResponseRedirect(url)
+            </div>
+            <p><strong>⚠️ Why:</strong> Application redirects users to a target specified by user input &#x27;url&#x27; without validation. An attacker can construct links redirecting users to malicious phishing domains while appearing legitimate.</p>
+            <p><strong>✅ Fix:</strong> Validate redirect targets against an allowed whitelist or verify that the URL is relative (e.g., using urllib.parse.urlparse and checking netloc is empty).</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>redirect(url)</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>from urllib.parse import urlparse
+if not urlparse(url).netloc:
+    return redirect(url)
+return redirect(&quot;/&quot;)</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div class="finding medium" style="border:1px solid #e0e0e0;border-left:4px solid #ffc107;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#ffc107;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    MEDIUM
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
+                <span style="margin-left:auto;color:#888;">#6</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">OPEN_REDIRECT</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/admin/auth/user/<id>/password/</strong>
+                 (line 29)
+                → C:\Users\prana\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                return HttpResponseRedirect(request.get_full_path())
+            </div>
+            <p><strong>⚠️ Why:</strong> Application redirects users to a target specified by user input &#x27;request.get_full_path&#x27; without validation. An attacker can construct links redirecting users to malicious phishing domains while appearing legitimate.</p>
+            <p><strong>✅ Fix:</strong> Validate redirect targets against an allowed whitelist or verify that the URL is relative (e.g., using urllib.parse.urlparse and checking netloc is empty).</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>redirect(request.get_full_path)</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>from urllib.parse import urlparse
+if not urlparse(request.get_full_path).netloc:
+    return redirect(request.get_full_path)
+return redirect(&quot;/&quot;)</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div class="finding medium" style="border:1px solid #e0e0e0;border-left:4px solid #ffc107;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#ffc107;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    MEDIUM
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
+                <span style="margin-left:auto;color:#888;">#7</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">OPEN_REDIRECT</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/admin/auth/user/<id>/password/</strong>
+                 (line 40)
+                → C:\Users\prana\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                return HttpResponseRedirect(
+            </div>
+            <p><strong>⚠️ Why:</strong> Application redirects users to a target specified by user input &#x27;reverse&#x27; without validation. An attacker can construct links redirecting users to malicious phishing domains while appearing legitimate.</p>
+            <p><strong>✅ Fix:</strong> Validate redirect targets against an allowed whitelist or verify that the URL is relative (e.g., using urllib.parse.urlparse and checking netloc is empty).</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>redirect(reverse)</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>from urllib.parse import urlparse
+if not urlparse(reverse).netloc:
+    return redirect(reverse)
+return redirect(&quot;/&quot;)</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div class="finding medium" style="border:1px solid #e0e0e0;border-left:4px solid #ffc107;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#ffc107;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    MEDIUM
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
+                <span style="margin-left:auto;color:#888;">#8</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">OPEN_REDIRECT</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/admin/auth/user/</strong>
+                 (line 28)
+                → C:\Users\prana\AppData\Roaming\Python\Python313\site-packages\django\contrib\admin\options.py
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                return HttpResponseRedirect(request.path + &quot;?&quot; + ERROR_FLAG + &quot;=1&quot;)
+            </div>
+            <p><strong>⚠️ Why:</strong> Application redirects users to a target specified by user input &#x27;url&#x27; without validation. An attacker can construct links redirecting users to malicious phishing domains while appearing legitimate.</p>
+            <p><strong>✅ Fix:</strong> Validate redirect targets against an allowed whitelist or verify that the URL is relative (e.g., using urllib.parse.urlparse and checking netloc is empty).</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>redirect(url)</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>from urllib.parse import urlparse
+if not urlparse(url).netloc:
+    return redirect(url)
+return redirect(&quot;/&quot;)</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div class="finding medium" style="border:1px solid #e0e0e0;border-left:4px solid #ffc107;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#ffc107;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    MEDIUM
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
+                <span style="margin-left:auto;color:#888;">#9</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">OPEN_REDIRECT</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/admin/auth/user/</strong>
+                 (line 82)
+                → C:\Users\prana\AppData\Roaming\Python\Python313\site-packages\django\contrib\admin\options.py
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                return HttpResponseRedirect(request.get_full_path())
+            </div>
+            <p><strong>⚠️ Why:</strong> Application redirects users to a target specified by user input &#x27;request.get_full_path&#x27; without validation. An attacker can construct links redirecting users to malicious phishing domains while appearing legitimate.</p>
+            <p><strong>✅ Fix:</strong> Validate redirect targets against an allowed whitelist or verify that the URL is relative (e.g., using urllib.parse.urlparse and checking netloc is empty).</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>redirect(request.get_full_path)</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>from urllib.parse import urlparse
+if not urlparse(request.get_full_path).netloc:
+    return redirect(request.get_full_path)
+return redirect(&quot;/&quot;)</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div class="finding medium" style="border:1px solid #e0e0e0;border-left:4px solid #ffc107;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#ffc107;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    MEDIUM
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
+                <span style="margin-left:auto;color:#888;">#10</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">OPEN_REDIRECT</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/admin/auth/user/</strong>
+                 (line 124)
+                → C:\Users\prana\AppData\Roaming\Python\Python313\site-packages\django\contrib\admin\options.py
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                return HttpResponseRedirect(request.get_full_path())
+            </div>
+            <p><strong>⚠️ Why:</strong> Application redirects users to a target specified by user input &#x27;request.get_full_path&#x27; without validation. An attacker can construct links redirecting users to malicious phishing domains while appearing legitimate.</p>
+            <p><strong>✅ Fix:</strong> Validate redirect targets against an allowed whitelist or verify that the URL is relative (e.g., using urllib.parse.urlparse and checking netloc is empty).</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>redirect(request.get_full_path)</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>from urllib.parse import urlparse
+if not urlparse(request.get_full_path).netloc:
+    return redirect(request.get_full_path)
+return redirect(&quot;/&quot;)</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div class="finding medium" style="border:1px solid #e0e0e0;border-left:4px solid #ffc107;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#ffc107;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    MEDIUM
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
+                <span style="margin-left:auto;color:#888;">#11</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">OPEN_REDIRECT</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/admin/auth/user/<path:object_id>/</strong>
+                 (line 33)
+                → C:\Users\prana\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                return HttpResponseRedirect(url)
+            </div>
+            <p><strong>⚠️ Why:</strong> Application redirects users to a target specified by user input &#x27;url&#x27; without validation. An attacker can construct links redirecting users to malicious phishing domains while appearing legitimate.</p>
+            <p><strong>✅ Fix:</strong> Validate redirect targets against an allowed whitelist or verify that the URL is relative (e.g., using urllib.parse.urlparse and checking netloc is empty).</p>
+            
+            <div style="margin-top:8px;">
+                <div style="background:#fff0f0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>Before:</strong> <code>redirect(url)</code>
+                </div>
+                <div style="background:#f0fff0;padding:8px;border-radius:4px;margin:4px 0;">
+                    <strong>After:</strong> <code>from urllib.parse import urlparse
+if not urlparse(url).netloc:
+    return redirect(url)
+return redirect(&quot;/&quot;)</code>
+                </div>
+            </div>
+            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
+        </div>
         <div class="finding critical" style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
                     border-radius:8px;padding:16px;margin:12px 0;
                     background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
@@ -94,7 +501,7 @@
                     CRITICAL
                 </span>
                 <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
-                <span style="margin-left:auto;color:#888;">#1</span>
+                <span style="margin-left:auto;color:#888;">#12</span>
             </div>
             <h3 style="margin:8px 0 4px 0;color:#333;">SQL_INJECTION</h3>
             <p style="color:#666;margin:4px 0;">
@@ -128,7 +535,7 @@
                     CRITICAL
                 </span>
                 <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
-                <span style="margin-left:auto;color:#888;">#2</span>
+                <span style="margin-left:auto;color:#888;">#13</span>
             </div>
             <h3 style="margin:8px 0 4px 0;color:#333;">XSS</h3>
             <p style="color:#666;margin:4px 0;">
@@ -163,7 +570,7 @@ return f&quot;&lt;h1&gt;{escape(term)}&lt;/h1&gt;&quot;</code>
                     CRITICAL
                 </span>
                 <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
-                <span style="margin-left:auto;color:#888;">#3</span>
+                <span style="margin-left:auto;color:#888;">#14</span>
             </div>
             <h3 style="margin:8px 0 4px 0;color:#333;">SSTI</h3>
             <p style="color:#666;margin:4px 0;">
@@ -197,7 +604,7 @@ return f&quot;&lt;h1&gt;{escape(term)}&lt;/h1&gt;&quot;</code>
                     CRITICAL
                 </span>
                 <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
-                <span style="margin-left:auto;color:#888;">#4</span>
+                <span style="margin-left:auto;color:#888;">#15</span>
             </div>
             <h3 style="margin:8px 0 4px 0;color:#333;">INSECURE_DESERIALIZATION</h3>
             <p style="color:#666;margin:4px 0;">
@@ -231,7 +638,7 @@ return f&quot;&lt;h1&gt;{escape(term)}&lt;/h1&gt;&quot;</code>
                     HIGH
                 </span>
                 <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
-                <span style="margin-left:auto;color:#888;">#5</span>
+                <span style="margin-left:auto;color:#888;">#16</span>
             </div>
             <h3 style="margin:8px 0 4px 0;color:#333;">DEBUG_MODE</h3>
             <p style="color:#666;margin:4px 0;">
@@ -265,7 +672,7 @@ return f&quot;&lt;h1&gt;{escape(term)}&lt;/h1&gt;&quot;</code>
                     HIGH
                 </span>
                 <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">SAST</span>
-                <span style="margin-left:auto;color:#888;">#6</span>
+                <span style="margin-left:auto;color:#888;">#17</span>
             </div>
             <h3 style="margin:8px 0 4px 0;color:#333;">HARDCODED_SECRET</h3>
             <p style="color:#666;margin:4px 0;">
@@ -300,7 +707,33 @@ SECRET_KEY = os.environ.get(&quot;DJANGO_SECRET_KEY&quot;)</code>
                     CRITICAL
                 </span>
                 <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#7</span>
+                <span style="margin-left:auto;color:#888;">#18</span>
+            </div>
+            <h3 style="margin:8px 0 4px 0;color:#333;">SSTI</h3>
+            <p style="color:#666;margin:4px 0;">
+                📍 <strong>/admin/login/</strong>
+                
+                → (dynamic test)
+            </p>
+            <div style="background:#f8f9fa;padding:8px 12px;border-radius:4px;
+                        font-family:monospace;font-size:0.9em;margin:8px 0;">
+                GET /admin/login/?search={{ 7|add:7 }}
+            </div>
+            <p><strong>⚠️ Why:</strong> SSTI payload &#x27;{{ 7|add:7 }}&#x27; sent as parameter &#x27;search&#x27; was evaluated to &#x27;14&#x27;, confirming Server-Side Template Injection.</p>
+            <p><strong>✅ Fix:</strong> Do not dynamically evaluate user input as templates.</p>
+            
+            <p>📖 <a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Template_Injection_Prevention_Cheat_Sheet.html" target="_blank">OWASP Reference</a></p>
+        </div>
+        <div class="finding critical" style="border:1px solid #e0e0e0;border-left:4px solid #dc3545;
+                    border-radius:8px;padding:16px;margin:12px 0;
+                    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                <span style="background:#dc3545;color:#fff;padding:4px 12px;
+                             border-radius:4px;font-weight:bold;font-size:0.85em;">
+                    CRITICAL
+                </span>
+                <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
+                <span style="margin-left:auto;color:#888;">#19</span>
             </div>
             <h3 style="margin:8px 0 4px 0;color:#333;">SQL_INJECTION</h3>
             <p style="color:#666;margin:4px 0;">
@@ -334,7 +767,7 @@ SECRET_KEY = os.environ.get(&quot;DJANGO_SECRET_KEY&quot;)</code>
                     CRITICAL
                 </span>
                 <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#8</span>
+                <span style="margin-left:auto;color:#888;">#20</span>
             </div>
             <h3 style="margin:8px 0 4px 0;color:#333;">XSS</h3>
             <p style="color:#666;margin:4px 0;">
@@ -369,7 +802,7 @@ HttpResponse(f&quot;...{escape(id)}...&quot;)</code>
                     CRITICAL
                 </span>
                 <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#9</span>
+                <span style="margin-left:auto;color:#888;">#21</span>
             </div>
             <h3 style="margin:8px 0 4px 0;color:#333;">INSECURE_DESERIALIZATION</h3>
             <p style="color:#666;margin:4px 0;">
@@ -403,7 +836,7 @@ HttpResponse(f&quot;...{escape(id)}...&quot;)</code>
                     CRITICAL
                 </span>
                 <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#10</span>
+                <span style="margin-left:auto;color:#888;">#22</span>
             </div>
             <h3 style="margin:8px 0 4px 0;color:#333;">XSS</h3>
             <p style="color:#666;margin:4px 0;">
@@ -438,7 +871,7 @@ HttpResponse(f&quot;...{escape(q)}...&quot;)</code>
                     MEDIUM
                 </span>
                 <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#11</span>
+                <span style="margin-left:auto;color:#888;">#23</span>
             </div>
             <h3 style="margin:8px 0 4px 0;color:#333;">MISSING_SECURITY_HEADER</h3>
             <p style="color:#666;margin:4px 0;">
@@ -472,7 +905,7 @@ HttpResponse(f&quot;...{escape(q)}...&quot;)</code>
                     MEDIUM
                 </span>
                 <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#12</span>
+                <span style="margin-left:auto;color:#888;">#24</span>
             </div>
             <h3 style="margin:8px 0 4px 0;color:#333;">MISSING_SECURITY_HEADER</h3>
             <p style="color:#666;margin:4px 0;">
@@ -506,7 +939,7 @@ HttpResponse(f&quot;...{escape(q)}...&quot;)</code>
                     MEDIUM
                 </span>
                 <span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75em;margin-left:8px;">DAST</span>
-                <span style="margin-left:auto;color:#888;">#13</span>
+                <span style="margin-left:auto;color:#888;">#25</span>
             </div>
             <h3 style="margin:8px 0 4px 0;color:#333;">MISSING_SECURITY_HEADER</h3>
             <p style="color:#666;margin:4px 0;">

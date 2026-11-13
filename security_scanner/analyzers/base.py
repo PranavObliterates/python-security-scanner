@@ -77,6 +77,8 @@ class BaseAnalyzer(ABC):
             return ".".join(reversed(parts))
         elif isinstance(node, ast.Call):
             return self._extract_var_name(node.func)
+        elif isinstance(node, ast.Subscript):
+            return self._extract_var_name(node.value)
         return ""
 
     def _is_direct_user_input(self, node: ast.AST) -> bool:
@@ -124,8 +126,8 @@ class BaseAnalyzer(ABC):
             if self._is_direct_user_input(node):
                 return True
             call_name = self._extract_var_name(node.func)
-            # Respect sanitization functions
-            if any(san in call_name for san in ("secure_filename", "escape")):
+            # Respect sanitization functions and safe internal URL/type generators
+            if any(san in call_name for san in ("secure_filename", "escape", "int", "float", "url_for", "reverse", "reverse_lazy", "resolve_url")):
                 return False
             # Method call on tainted object, e.g. user_input.strip()
             if isinstance(node.func, ast.Attribute) and self._is_node_tainted(node.func.value, tainted):

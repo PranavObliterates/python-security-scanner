@@ -43,16 +43,26 @@ class _WeakCryptoVisitor(ast.NodeVisitor):
         self.analyzer = analyzer
 
     def visit_Call(self, node: ast.Call) -> None:
-        # Check hashlib.md5(), hashlib.sha1(), hashlib.new('md5'), hashlib.new('sha1')
-        if isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name):
-            if node.func.value.id == "hashlib":
-                attr_lower = node.func.attr.lower()
+        # Check hashlib.md5(), hashlib.sha1(), hashlib.new('md5'), pycryptodome MD5.new()
+        if isinstance(node.func, ast.Attribute):
+            attr_lower = node.func.attr.lower()
+            caller_name = self.analyzer._extract_var_name(node.func.value)
+
+            if caller_name in ("hashlib", "Crypto.Hash", "Cryptodome.Hash") or (isinstance(node.func.value, ast.Name) and node.func.value.id == "hashlib"):
                 if attr_lower in ("md5", "sha1", "sha", "md4"):
                     self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), attr_lower)
-                elif attr_lower == "new" and node.args:
-                    first_arg = node.args[0]
-                    if isinstance(first_arg, ast.Constant) and str(first_arg.value).lower() in ("md5", "sha1", "sha", "md4"):
-                        self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), str(first_arg.value).lower())
+                elif attr_lower == "new":
+                    algo = ""
+                    if node.args and isinstance(node.args[0], ast.Constant):
+                        algo = str(node.args[0].value).lower()
+                    for kw in node.keywords:
+                        if kw.arg in ("name", "digestmod") and isinstance(kw.value, ast.Constant):
+                            algo = str(kw.value.value).lower()
+                    if algo in ("md5", "sha1", "sha", "md4"):
+                        self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), algo)
+            elif caller_name.lower() in ("md5", "sha1", "md4", "sha") and attr_lower == "new":
+                self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), caller_name.lower())
+
         # Check md5() or sha1() direct call
         elif isinstance(node.func, ast.Name) and node.func.id.lower() in ("md5", "sha1", "sha", "md4"):
             self.analyzer._flag(node.lineno, self.analyzer._get_line_text(node.lineno), node.func.id.lower())

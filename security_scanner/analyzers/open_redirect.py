@@ -63,7 +63,7 @@ class _OpenRedirectVisitor(ast.NodeVisitor):
         elif isinstance(node.func, ast.Attribute):
             func_name = node.func.attr
 
-        if func_name in ("redirect", "HttpResponseRedirect"):
+        if func_name in ("redirect", "HttpResponseRedirect", "HttpResponsePermanentRedirect"):
             if node.args:
                 target_arg = node.args[0]
                 if self.analyzer._is_node_tainted(target_arg, self.tainted_urls):

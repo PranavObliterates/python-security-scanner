@@ -1,7 +1,7 @@
 """SQL Injection detection via AST analysis."""
 import ast
 import re
-from typing import List
+from typing import List, Optional
 from .base import BaseAnalyzer
 from ..models.finding import Finding, Severity, VulnerabilityType
 
@@ -52,6 +52,16 @@ class _SQLInjectionVisitor(ast.NodeVisitor):
 
     def __init__(self, analyzer: SQLInjectionAnalyzer):
         self.analyzer = analyzer
+        self.tainted_vars = set()
+
+    def visit_Assign(self, node: ast.Assign) -> None:
+        """Track tainted variables constructed with user input."""
+        if self.analyzer._is_node_tainted(node.value, self.tainted_vars):
+            for target in node.targets:
+                var_name = self.analyzer._extract_var_name(target)
+                if var_name:
+                    self.tainted_vars.add(var_name)
+        self.generic_visit(node)
 
     def visit_JoinedStr(self, node: ast.JoinedStr) -> None:
         """Detect f-strings containing SQL keywords with variables.
@@ -59,24 +69,24 @@ class _SQLInjectionVisitor(ast.NodeVisitor):
         Example: query = f"SELECT * FROM users WHERE id = {user_id}"
         """
         constant_parts = ""
-        variables = []
+        has_taint = False
+        culprit_var = ""
 
         for value in node.values:
             if isinstance(value, ast.Constant) and isinstance(value.value, str):
                 constant_parts += value.value
             elif isinstance(value, ast.FormattedValue):
                 var_name = self.analyzer._extract_var_name(value.value)
-                if var_name:
-                    variables.append(var_name)
+                if self.analyzer._is_node_tainted(value.value, self.tainted_vars) or (var_name and self.analyzer._is_user_input_name(var_name)):
+                    has_taint = True
+                    culprit_var = var_name or culprit_var
 
-        if SQL_KEYWORDS_PATTERN.search(constant_parts) and variables:
-            for var in variables:
-                if self.analyzer._is_user_input_name(var):
-                    self.analyzer._flag(
-                        line=node.lineno,
-                        code=self.analyzer._get_line_text(node.lineno),
-                        variable=var,
-                    )
+        if SQL_KEYWORDS_PATTERN.search(constant_parts) and has_taint:
+            self.analyzer._flag(
+                line=node.lineno,
+                code=self.analyzer._get_line_text(node.lineno),
+                variable=culprit_var or "input",
+            )
 
         self.generic_visit(node)
 
@@ -88,16 +98,33 @@ class _SQLInjectionVisitor(ast.NodeVisitor):
         if isinstance(node.op, ast.Add):
             full_string = self._reconstruct_binop_string(node)
             if SQL_KEYWORDS_PATTERN.search(full_string):
-                variables = self._extract_binop_variables(node)
-                for var in variables:
-                    if self.analyzer._is_user_input_name(var):
-                        self.analyzer._flag(
-                            line=node.lineno,
-                            code=self.analyzer._get_line_text(node.lineno),
-                            variable=var,
-                        )
+                tainted_node = self._find_tainted_child(node)
+                if tainted_node is not None:
+                    var_name = self.analyzer._extract_var_name(tainted_node) or "input"
+                    self.analyzer._flag(
+                        line=node.lineno,
+                        code=self.analyzer._get_line_text(node.lineno),
+                        variable=var_name,
+                    )
+                else:
+                    variables = self._extract_binop_variables(node)
+                    for var in variables:
+                        if self.analyzer._is_user_input_name(var):
+                            self.analyzer._flag(
+                                line=node.lineno,
+                                code=self.analyzer._get_line_text(node.lineno),
+                                variable=var,
+                            )
 
         self.generic_visit(node)
+
+    def _find_tainted_child(self, node: ast.AST) -> Optional[ast.AST]:
+        """Find any tainted expression inside a binary operation tree."""
+        if isinstance(node, ast.BinOp):
+            return self._find_tainted_child(node.left) or self._find_tainted_child(node.right)
+        elif self.analyzer._is_node_tainted(node, self.tainted_vars):
+            return node
+        return None
 
     def _reconstruct_binop_string(self, node: ast.BinOp) -> str:
         """Reconstruct the string parts of a concatenation."""
