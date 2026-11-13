@@ -4,7 +4,12 @@ from security_scanner.analyzers.path_traversal import PathTraversalAnalyzer
 from security_scanner.analyzers.ssrf import SSRFAnalyzer
 from security_scanner.analyzers.weak_crypto import WeakCryptoAnalyzer
 from security_scanner.analyzers.open_redirect import OpenRedirectAnalyzer
+from security_scanner.analyzers.sql_injection import SQLInjectionAnalyzer
+from security_scanner.analyzers.xss import XSSAnalyzer
+from security_scanner.analyzers.ssti import SSTIAnalyzer
+from security_scanner.analyzers.deserialization import DeserializationAnalyzer
 from security_scanner.models.finding import VulnerabilityType
+from pysecure.cli import load_app_from_path
 
 
 def test_command_injection_detected():
@@ -256,5 +261,165 @@ return redirect(request.args["next"])
     findings = analyzer.analyze()
     assert len(findings) == 1
     assert findings[0].vuln_type == VulnerabilityType.OPEN_REDIRECT
+
+
+def test_open_redirect_safe_url_for_not_flagged():
+    """Ensure redirect(url_for('login')) is not flagged as open redirect."""
+    code = '''
+return redirect(url_for("login"))
+'''
+    analyzer = OpenRedirectAnalyzer("/redirect", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 0
+
+
+def test_sqli_subscript_detected():
+    """Ensure SQL injection with request subscript in f-string is detected."""
+    code = '''
+query = f"SELECT * FROM users WHERE id = {request.args['id']}"
+'''
+    analyzer = SQLInjectionAnalyzer("/user", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.SQL_INJECTION
+
+
+def test_sqli_binop_call_detected():
+    """Ensure SQL injection via string concatenation with request call is detected."""
+    code = '''
+query = "SELECT * FROM users WHERE id = " + request.args.get("id")
+'''
+    analyzer = SQLInjectionAnalyzer("/user", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.SQL_INJECTION
+
+
+def test_sqli_binop_subscript_detected():
+    """Ensure SQL injection via string concatenation with subscript is detected."""
+    code = '''
+query = "SELECT * FROM users WHERE id = " + request.args["id"]
+'''
+    analyzer = SQLInjectionAnalyzer("/user", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.SQL_INJECTION
+
+
+def test_sqli_method_chaining_detected():
+    """Ensure SQL injection with chained string methods is detected."""
+    code = '''
+user_id = request.args.get("id")
+cleaned = user_id.strip()
+query = f"SELECT * FROM users WHERE id = {cleaned}"
+'''
+    analyzer = SQLInjectionAnalyzer("/user", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.SQL_INJECTION
+
+
+def test_sqli_int_cast_safe_not_flagged():
+    """Ensure integer casting protects against SQL injection detection."""
+    code = '''
+user_id = int(request.args.get("id"))
+query = f"SELECT * FROM users WHERE id = {user_id}"
+'''
+    analyzer = SQLInjectionAnalyzer("/user", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 0
+
+
+def test_xss_subscript_detected():
+    """Ensure XSS with request subscript in f-string is detected."""
+    code = '''
+return f"<div>{request.args['name']}</div>"
+'''
+    analyzer = XSSAnalyzer("/profile", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.XSS
+
+
+def test_xss_concat_detected():
+    """Ensure XSS via HTML string concatenation is detected."""
+    code = '''
+name = request.args.get("name")
+return "<h1>" + name + "</h1>"
+'''
+    analyzer = XSSAnalyzer("/profile", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.XSS
+
+
+def test_xss_direct_call_concat_detected():
+    """Ensure XSS via string concatenation with direct input call is detected."""
+    code = '''
+return "<h1>" + request.args.get("name") + "</h1>"
+'''
+    analyzer = XSSAnalyzer("/profile", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.XSS
+
+
+def test_ssti_subscript_detected():
+    """Ensure render_template_string with subscript is detected as SSTI."""
+    code = '''
+return render_template_string(request.args["tmpl"])
+'''
+    analyzer = SSTIAnalyzer("/render", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.SSTI
+
+
+def test_ssti_string_template_safe():
+    """Ensure standard library string.Template is not flagged as SSTI."""
+    code = '''
+import string
+tmpl = string.Template("$greeting $name")
+'''
+    analyzer = SSTIAnalyzer("/render", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 0
+
+
+def test_deserialization_pickle_load_detected():
+    """Ensure pickle.load(f) is detected as insecure deserialization."""
+    code = '''
+import pickle
+obj = pickle.load(f)
+'''
+    analyzer = DeserializationAnalyzer("/upload", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.INSECURE_DESERIALIZATION
+
+
+def test_deserialization_yaml_safeloader_not_flagged():
+    """Ensure yaml.load with SafeLoader is not flagged."""
+    code = '''
+import yaml
+data = yaml.load(user_data, Loader=yaml.SafeLoader)
+'''
+    analyzer = DeserializationAnalyzer("/upload", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 0
+
+
+def test_cli_load_directory_flask():
+    """CLI should discover and load Flask app from directory."""
+    app = load_app_from_path("vuln-flask")
+    assert app is not None
+    assert hasattr(app, "route")
+
+
+def test_cli_load_directory_django():
+    """CLI should discover and load Django WSGI app from directory."""
+    app = load_app_from_path("vuln-django")
+    assert app is not None
+
 
 
