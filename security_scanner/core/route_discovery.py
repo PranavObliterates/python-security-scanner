@@ -36,8 +36,13 @@ def discover_flask_routes(app) -> List[RouteInfo]:
             source = inspect.getsource(view_func)
             file_path = inspect.getfile(view_func)
         except (OSError, TypeError):
-            source = None
-            file_path = None
+            try:
+                unwrapped = inspect.unwrap(view_func)
+                source = inspect.getsource(unwrapped)
+                file_path = inspect.getfile(unwrapped)
+            except (OSError, TypeError):
+                source = None
+                file_path = None
 
         routes.append(RouteInfo(
             path=rule.rule,
