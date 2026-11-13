@@ -626,6 +626,41 @@ return render_template_string(source=tmpl)
     assert findings[0].vuln_type == VulnerabilityType.SSTI
 
 
+def test_command_injection_eval_detected():
+    """Ensure eval() with user input is detected as command/code injection."""
+    code = '''
+expr = request.args.get("expr")
+result = eval(expr)
+'''
+    analyzer = CommandInjectionAnalyzer("/calc", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.COMMAND_INJECTION
+
+
+def test_command_injection_eval_safe_constant():
+    """Ensure eval() with static constant expression is not flagged."""
+    code = '''
+result = eval("2 + 2")
+'''
+    analyzer = CommandInjectionAnalyzer("/calc", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 0
+
+
+def test_command_injection_exec_detected():
+    """Ensure exec() with user input is detected as command/code injection."""
+    code = '''
+user_script = request.form.get("code")
+exec(user_script)
+'''
+    analyzer = CommandInjectionAnalyzer("/run", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.COMMAND_INJECTION
+
+
+
 
 
 

@@ -65,7 +65,7 @@ class _CommandInjectionVisitor(ast.NodeVisitor):
 
     def visit_Call(self, node: ast.Call) -> None:
         call_pair = self._resolve_call(node.func)
-        if call_pair in DANGEROUS_CALLS or (isinstance(node.func, ast.Name) and node.func.id in ("system", "popen")):
+        if call_pair in DANGEROUS_CALLS or (isinstance(node.func, ast.Name) and node.func.id in ("system", "popen", "eval", "exec")):
             func_name = f"{call_pair[0]}.{call_pair[1]}" if call_pair else getattr(node.func, "id", "command")
             cmd_arg = None
             if node.args:
