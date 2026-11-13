@@ -26,7 +26,7 @@ It generates human-friendly terminal reports, machine-readable JSON, visual HTML
 | **A03: Injection** | Server-Side Template Injection (SSTI) | SAST & DAST |
 | **A05: Security Misconfiguration** | Debug Mode Enabled | SAST (Global Config) |
 | **A05: Security Misconfiguration** | Missing Security Headers (CSP, HSTS, X-Frame) | DAST |
-| **A08: Software & Data Integrity** | Insecure Deserialization (pickle) | SAST & DAST |
+| **A08: Software & Data Integrity** | Insecure Deserialization (pickle, PyYAML) | SAST & DAST |
 | **A10: Server-Side Request Forgery** | SSRF (Unchecked HTTP requests) | SAST |
 
 ---
@@ -119,11 +119,14 @@ save_pdf_report(result, "security_report.pdf", prompt_for_key=True)
 
 ### 2. Command Line Interface (CLI)
 ```bash
-# Scan a Flask application (using installed CLI or python module)
+# Scan a Flask application by file or directory (auto-detects app.py)
 pysecure scan vuln-flask/app.py --html report.html --pdf report.pdf
-python -m pysecure scan vuln-flask/app.py --html report.html --pdf report.pdf
+pysecure scan vuln-flask/ --static-only
 
-# Scan a Django application WSGI target
+# Scan a Django project by directory, manage.py, or wsgi module
+pysecure scan vuln-django/
+pysecure scan vuln-django/manage.py
+pysecure scan vuln-django/vuln_django/wsgi.py --pdf django_audit.pdf
 pysecure scan vuln_django.wsgi:application --pdf django_audit.pdf
 
 # Scan with session-only Gemini API key
