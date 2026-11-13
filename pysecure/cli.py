@@ -13,6 +13,49 @@ from security_scanner.reporting.sarif_report import save_sarif_report
 from security_scanner import __version__
 
 
+SEVERITY_ORDER = {
+    "CRITICAL": 4,
+    "HIGH": 3,
+    "MEDIUM": 2,
+    "LOW": 1,
+    "INFO": 0,
+}
+
+
+def load_cli_config(target: str = "") -> dict:
+    """Load configuration from .pysecurerc or pyproject.toml."""
+    target_dir = target if os.path.isdir(target) else os.path.dirname(os.path.abspath(target)) if os.path.isfile(target) else "."
+    search_dirs = [os.getcwd()]
+    if target_dir and target_dir not in search_dirs:
+        search_dirs.append(target_dir)
+
+    for d in search_dirs:
+        rc_path = os.path.join(d, ".pysecurerc")
+        if os.path.isfile(rc_path):
+            try:
+                import json
+                with open(rc_path, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                pass
+
+        pyproj_path = os.path.join(d, "pyproject.toml")
+        if os.path.isfile(pyproj_path):
+            try:
+                try:
+                    import tomllib
+                except ImportError:
+                    import tomli as tomllib
+                with open(pyproj_path, "rb") as f:
+                    data = tomllib.load(f)
+                    cfg = data.get("tool", {}).get("pysecure")
+                    if cfg and isinstance(cfg, dict):
+                        return cfg
+            except Exception:
+                pass
+    return {}
+
+
 def load_app_from_path(app_target: str):
     """Load Flask or Django app object from file path, directory, or module string.
 
@@ -201,6 +244,23 @@ def main(argv=None):
         action="store_true",
         help="Do not prompt for Gemini API key interactively in the terminal."
     )
+    scan_parser.add_argument(
+        "--severity",
+        type=lambda s: s.upper(),
+        choices=["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"],
+        help="Minimum severity level to include in findings and reports."
+    )
+    scan_parser.add_argument(
+        "--fail-on",
+        type=lambda s: s.upper(),
+        choices=["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"],
+        help="Exit with code 1 if issues at or above this severity are found (default: CRITICAL)."
+    )
+    scan_parser.add_argument(
+        "--ignore",
+        metavar="RULES",
+        help="Comma-separated list of vulnerability types or rule names to ignore (e.g. DEBUG_MODE,WEAK_CRYPTO)."
+    )
 
     args = parser.parse_args(argv)
 
@@ -218,6 +278,26 @@ def main(argv=None):
 
         print(f"[*] Starting PySecure scan (SAST + {'DAST' if not args.static_only else 'Static Only'})...")
         result = scan_app(app, dynamic=not args.static_only)
+
+        # Load file-based config defaults (.pysecurerc or pyproject.toml [tool.pysecure])
+        cfg = load_cli_config(args.target)
+
+        # Apply config defaults if CLI arguments were not provided
+        severity_filter = args.severity or cfg.get("severity")
+        fail_on_threshold = args.fail_on or cfg.get("fail_on", "CRITICAL")
+        ignore_rules = args.ignore or cfg.get("ignore", [])
+        if isinstance(ignore_rules, list):
+            ignore_rules = ",".join(ignore_rules)
+
+        # Filter findings by ignore list
+        if ignore_rules:
+            ignore_set = {x.strip().upper() for x in ignore_rules.split(",") if x.strip()}
+            result.findings = [f for f in result.findings if f.vuln_type.value.upper() not in ignore_set]
+
+        # Filter findings by minimum severity
+        if severity_filter:
+            min_sev = SEVERITY_ORDER.get(str(severity_filter).upper(), 0)
+            result.findings = [f for f in result.findings if SEVERITY_ORDER.get(f.severity.value, 0) >= min_sev]
 
         # Print terminal output
         print_report(result)
@@ -239,8 +319,13 @@ def main(argv=None):
             )
             print(f"   [*] PDF report saved to: {args.pdf}")
 
-        # Exit code reflects findings: return 1 if critical issues found
-        sys.exit(1 if result.has_critical else 0)
+        # Exit code reflects findings based on --fail-on threshold (defaults to CRITICAL)
+        threshold_val = SEVERITY_ORDER.get(str(fail_on_threshold).upper(), 4)
+        has_violating_issues = any(
+            SEVERITY_ORDER.get(f.severity.value, 0) >= threshold_val
+            for f in result.findings
+        )
+        sys.exit(1 if has_violating_issues else 0)
 
 
 if __name__ == "__main__":

@@ -87,9 +87,10 @@ PySecure operates via a dual-engine analysis pipeline designed for maximum speed
 
 1. **Static Analysis (SAST)**:
    - **AST Analysis Engine**: Parses Python source code into Abstract Syntax Trees using Python's native `ast` module.
-   - **Deep Taint Propagation**: Identifies untrusted user input sources (Flask `request.args`, `request.form`, `request.json`, `request.values`, `request.data`, `request.headers`; Django `request.GET`, `request.POST`, `request.body`, `request.COOKIES`) and tracks data flow across variable assignments, method transformations (e.g. `.strip()`, `.lower()`), nested collections (dictionaries, lists, tuples), and intermediate variables into sensitive sinks.
-   - **Dangerous Sink Detection**: Catches raw SQL interpolation, `pickle.loads()`, `os.system()` / `subprocess` shell calls, unvalidated `open()` path traversals, unvalidated HTTP calls (SSRF), unvalidated redirects, and weak cryptographic hashing (`md4`, `md5`, `sha1`, `sha`).
-   - **Sanitization-Aware**: Respects defensive measures such as `werkzeug.utils.secure_filename()` and `markupsafe.escape()`, eliminating false positives on properly sanitized values.
+   - **Deep Taint Propagation**: Identifies untrusted user input sources (Flask `request.args`, `request.form`, `request.json`, `request.values`, `request.data`, `request.headers`, `request.query_string`; Django `request.GET`, `request.POST`, `request.body`, `request.COOKIES`, `request.FILES`, `request.META`) and tracks data flow across variable assignments, method transformations (e.g. `.strip()`, `.lower()`), nested collections (dictionaries, lists, tuples), string formatting (`.format()`, `%` formatting, f-strings), and intermediate variables into sensitive sinks.
+   - **Dangerous Sink Detection**: Catches raw SQL interpolation, `pickle.loads()` / `pickle.load()`, `os.system()` / `subprocess` shell calls, unvalidated `open()` path traversals, unvalidated HTTP calls (SSRF), unvalidated redirects, and weak cryptographic hashing (`md4`, `md5`, `sha1`, `sha`, `hmac`).
+   - **Sanitization & Safety-Aware**: Accurately recognizes type conversions (`int()`, `float()`), HTML escaping (`markupsafe.escape()`, `html.escape()`), path sanitizers (`werkzeug.utils.secure_filename()`), safe URL generators (`url_for()`, `reverse()`), shell quoting (`shlex.quote()`), and safe subprocess invocations with `shell=False`.
+   - **Noise Reduction & Third-Party Isolation**: Isolates application-layer view code and excludes third-party framework code located inside `site-packages` or `dist-packages`, eliminating false positives in library internals.
    - **Configuration Auditing**: Inspects Flask and Django application configurations for insecure `DEBUG = True`, weak or hardcoded `SECRET_KEY`, missing `CSRF` protection, and missing security middleware.
 
 2. **Dynamic Analysis (DAST)**:
@@ -139,6 +140,32 @@ pysecure scan app.py --sarif results.sarif
 
 # Static-only scan (fast mode without running test client)
 pysecure scan app.py --static-only --json report.json
+
+# CI/CD Quality Gate: fail only on HIGH or CRITICAL issues
+pysecure scan app.py --fail-on HIGH
+
+# Filter output by minimum severity and ignore specific rules
+pysecure scan app.py --severity MEDIUM --ignore DEBUG_MODE,WEAK_CRYPTO
+```
+
+### 3. Configuration Files (`pyproject.toml` or `.pysecurerc`)
+PySecure automatically discovers configuration from `pyproject.toml` or `.pysecurerc` in the project root:
+
+**`pyproject.toml`:**
+```toml
+[tool.pysecure]
+severity = "MEDIUM"
+fail_on = "HIGH"
+ignore = ["DEBUG_MODE"]
+```
+
+**`.pysecurerc`:**
+```json
+{
+  "severity": "MEDIUM",
+  "fail_on": "HIGH",
+  "ignore": ["DEBUG_MODE"]
+}
 ```
 
 ---
