@@ -54,6 +54,10 @@ class BaseAnalyzer(ABC):
             return True
 
         escaped = re.escape(name)
+        for safe in ("int(", "float(", "escape(", "secure_filename(", "url_for(", "reverse("):
+            if re.search(rf"\b{escaped}\s*=\s*{re.escape(safe)}", self.source_code):
+                return False
+
         if re.search(rf"\b{escaped}\s*=\s*.*request\.", self.source_code):
             return True
 

@@ -101,6 +101,7 @@ class _XSSVisitor(ast.NodeVisitor):
                         variable=var_name,
                         context="concatenation with HTML tags",
                     )
+                    return
         self.generic_visit(node)
 
     def visit_Call(self, node: ast.Call) -> None:

@@ -106,6 +106,7 @@ class _SQLInjectionVisitor(ast.NodeVisitor):
                         code=self.analyzer._get_line_text(node.lineno),
                         variable=var_name,
                     )
+                    return
                 else:
                     variables = self._extract_binop_variables(node)
                     for var in variables:
@@ -115,6 +116,7 @@ class _SQLInjectionVisitor(ast.NodeVisitor):
                                 code=self.analyzer._get_line_text(node.lineno),
                                 variable=var,
                             )
+                            return
 
         self.generic_visit(node)
 
