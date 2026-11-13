@@ -422,4 +422,208 @@ def test_cli_load_directory_django():
     assert app is not None
 
 
+def test_sqli_format_call_detected():
+    """Ensure SQL injection via .format() is detected."""
+    code = '''
+user_id = request.args.get("id")
+query = "SELECT * FROM users WHERE id = {}".format(user_id)
+'''
+    analyzer = SQLInjectionAnalyzer("/user", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.SQL_INJECTION
+
+
+def test_sqli_mod_formatting_detected():
+    """Ensure SQL injection via % formatting is detected."""
+    code = '''
+user_id = request.args.get("id")
+query = "SELECT * FROM users WHERE id = '%s'" % user_id
+'''
+    analyzer = SQLInjectionAnalyzer("/user", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.SQL_INJECTION
+
+
+def test_sqli_multi_step_internal_function_taint_preserved():
+    """Ensure function calls containing 'int' (e.g. internal_lookup) do not lose taint."""
+    code = '''
+uid = request.args['user']
+res = internal_lookup(uid)
+query = f"SELECT * FROM users WHERE name = '{res}'"
+'''
+    analyzer = SQLInjectionAnalyzer("/user", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.SQL_INJECTION
+
+
+def test_xss_format_call_detected():
+    """Ensure XSS via .format() with HTML tags is detected."""
+    code = '''
+name = request.args.get("name")
+return "<h1>{}</h1>".format(name)
+'''
+    analyzer = XSSAnalyzer("/profile", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.XSS
+
+
+def test_xss_mod_formatting_detected():
+    """Ensure XSS via % formatting with HTML tags is detected."""
+    code = '''
+name = request.args.get("name")
+return "<h1>%s</h1>" % name
+'''
+    analyzer = XSSAnalyzer("/profile", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.XSS
+
+
+def test_open_redirect_safe_request_path_not_flagged():
+    """Ensure internal redirection to request.path or request.get_full_path() is not flagged."""
+    code = '''
+if request.method == "POST":
+    return redirect(request.path)
+return HttpResponseRedirect(request.get_full_path())
+'''
+    analyzer = OpenRedirectAnalyzer("/profile", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 0
+
+
+def test_open_redirect_keyword_arg_detected():
+    """Ensure redirect with keyword argument target is detected."""
+    code = '''
+target = request.args.get("next")
+return redirect(to=target)
+'''
+    analyzer = OpenRedirectAnalyzer("/login", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.OPEN_REDIRECT
+
+
+def test_ssrf_keyword_arg_detected():
+    """Ensure requests.get with url= keyword argument is detected."""
+    code = '''
+webhook_url = request.args.get("url")
+requests.get(url=webhook_url)
+'''
+    analyzer = SSRFAnalyzer("/webhook", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.SSRF
+
+
+def test_path_traversal_keyword_arg_detected():
+    """Ensure open with file= keyword argument is detected."""
+    code = '''
+file_name = request.args.get("file")
+with open(file=f"uploads/{file_name}", mode="r") as f:
+    data = f.read()
+'''
+    analyzer = PathTraversalAnalyzer("/download", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.PATH_TRAVERSAL
+
+
+def test_command_injection_safe_list_with_user_arg_not_flagged():
+    """Ensure subprocess.run with argument list and shell=False is not flagged as command injection."""
+    code = '''
+user_file = request.args.get("file")
+subprocess.run(["cat", user_file], shell=False, check=True)
+'''
+    analyzer = CommandInjectionAnalyzer("/view", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 0
+
+
+def test_command_injection_list_with_shell_true_detected():
+    """Ensure subprocess.run with argument list AND shell=True IS detected as command injection."""
+    code = '''
+ip = request.args.get("ip")
+subprocess.run(["ping", ip], shell=True)
+'''
+    analyzer = CommandInjectionAnalyzer("/ping", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.COMMAND_INJECTION
+
+
+def test_command_injection_keyword_arg_detected():
+    """Ensure subprocess.run with args= keyword argument is detected."""
+    code = '''
+ip = request.args.get("ip")
+subprocess.run(args=f"ping {ip}")
+'''
+    analyzer = CommandInjectionAnalyzer("/ping", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.COMMAND_INJECTION
+
+
+def test_deserialization_from_pickle_import_loads():
+    """Ensure from pickle import loads is detected."""
+    code = '''
+from pickle import loads
+data = loads(request.args.get("data"))
+'''
+    analyzer = DeserializationAnalyzer("/upload", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.INSECURE_DESERIALIZATION
+
+
+def test_deserialization_from_pickle_import_load():
+    """Ensure from pickle import load is detected."""
+    code = '''
+from pickle import load
+data = load(file_obj)
+'''
+    analyzer = DeserializationAnalyzer("/upload", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.INSECURE_DESERIALIZATION
+
+
+def test_weak_crypto_hmac_md5_detected():
+    """Ensure hmac.new with MD5 is detected as weak crypto."""
+    code = '''
+import hmac, hashlib
+sig = hmac.new(b"secret", data, "md5").hexdigest()
+'''
+    analyzer = WeakCryptoAnalyzer("/auth", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.WEAK_CRYPTO
+
+
+def test_ssti_from_string_import_template_safe():
+    """Ensure from string import Template is not flagged as SSTI."""
+    code = '''
+from string import Template
+tmpl = Template(f"Hello $name {user}")
+'''
+    analyzer = SSTIAnalyzer("/greet", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 0
+
+
+def test_ssti_keyword_arg_detected():
+    """Ensure render_template_string with keyword argument is detected."""
+    code = '''
+tmpl = request.args.get("tmpl")
+return render_template_string(source=tmpl)
+'''
+    analyzer = SSTIAnalyzer("/render", "test.py", code)
+    findings = analyzer.analyze()
+    assert len(findings) == 1
+    assert findings[0].vuln_type == VulnerabilityType.SSTI
+
+
 
