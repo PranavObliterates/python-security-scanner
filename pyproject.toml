@@ -45,9 +45,13 @@ dependencies = [
     "reportlab>=4.0.0",
     "requests>=2.28.0",
     "google-genai>=0.1.0",
+    "tomli>=2.0.0; python_version < '3.11'",
 ]
 
 [project.optional-dependencies]
+browser = [
+    "playwright>=1.40",
+]
 dev = [
     "pytest>=7.0",
     "coverage>=7.0",

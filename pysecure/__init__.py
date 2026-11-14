@@ -13,6 +13,7 @@ from security_scanner.reporting.html_report import save_html_report, generate_ht
 from security_scanner.reporting.pdf_report import save_pdf_report
 from security_scanner.reporting.sarif_report import save_sarif_report, generate_sarif_report
 from security_scanner.reporting.ai_advisor import get_session_api_key, generate_ai_security_summary
+from security_scanner.dynamic.remote import scan_remote_url
 
 __version__ = "0.2.0"
 __all__ = [
@@ -31,4 +32,5 @@ __all__ = [
     "generate_sarif_report",
     "get_session_api_key",
     "generate_ai_security_summary",
+    "scan_remote_url",
 ]

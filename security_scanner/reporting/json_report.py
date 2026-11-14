@@ -10,6 +10,10 @@ def generate_json_report(result: ScanResult) -> str:
         "scan_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "app_name": result.app_name,
         "routes_scanned": result.routes_scanned,
+        "routes_tested": result.routes_tested,
+        "warnings": result.warnings,
+        "forms_discovered": result.forms_discovered,
+        "browser_pages_tested": result.browser_pages_tested,
         "scan_duration_seconds": round(result.scan_duration_seconds, 3),
         "summary": {
             "total_issues": len(result.findings),
@@ -35,6 +39,9 @@ def generate_json_report(result: ScanResult) -> str:
             "fix_before": finding.fix_before,
             "fix_after": finding.fix_after,
             "reference": finding.reference,
+            "status": finding.status,
+            "rule_id": finding.rule_id or finding.vuln_type.value,
+            "cwe": finding.cwe,
         })
 
     return json.dumps(report, indent=2)

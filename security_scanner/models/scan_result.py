@@ -10,6 +10,10 @@ class ScanResult:
     findings: List[Finding] = field(default_factory=list)
     routes_scanned: int = 0
     scan_duration_seconds: float = 0.0
+    routes_tested: int = 0
+    warnings: List[str] = field(default_factory=list)
+    forms_discovered: List[dict] = field(default_factory=list)
+    browser_pages_tested: int = 0
 
     @property
     def critical_count(self) -> int:

@@ -1,9 +1,16 @@
 """Tests for the SQL Injection analyzer."""
 from security_scanner.analyzers.sql_injection import SQLInjectionAnalyzer
+from security_scanner.analyzers.xss import XSSAnalyzer
 from security_scanner.models.finding import VulnerabilityType 
 
 
 class TestSQLInjectionAnalyzer:
+
+    def test_analyzers_reuse_parsed_source_ast(self):
+        source = 'value = request.args.get("value")'
+        sql_tree = SQLInjectionAnalyzer("/a", "app.py", source)._tree
+        xss_tree = XSSAnalyzer("/b", "app.py", source)._tree
+        assert sql_tree is xss_tree
 
     def test_detects_fstring_sqli(self):
         """Should detect f-string SQL injection with user input."""

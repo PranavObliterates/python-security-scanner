@@ -411,14 +411,14 @@ data = yaml.load(user_data, Loader=yaml.SafeLoader)
 
 def test_cli_load_directory_flask():
     """CLI should discover and load Flask app from directory."""
-    app = load_app_from_path("vuln-flask")
+    app = load_app_from_path("demos/vulnerable-flask")
     assert app is not None
     assert hasattr(app, "route")
 
 
 def test_cli_load_directory_django():
     """CLI should discover and load Django WSGI app from directory."""
-    app = load_app_from_path("vuln-django")
+    app = load_app_from_path("demos/vulnerable-django")
     assert app is not None
 
 
@@ -658,7 +658,6 @@ exec(user_script)
     findings = analyzer.analyze()
     assert len(findings) == 1
     assert findings[0].vuln_type == VulnerabilityType.COMMAND_INJECTION
-
 
 
 

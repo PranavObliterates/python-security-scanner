@@ -101,4 +101,57 @@ def check_cookie_security(response_headers: dict, endpoint: str) -> List[Finding
             source="DAST",
         ))
 
+    if "samesite" not in cookie_lower:
+        findings.append(Finding(
+            vuln_type=VulnerabilityType.INSECURE_COOKIE,
+            severity=Severity.MEDIUM,
+            endpoint=endpoint,
+            file="HTTP response",
+            line=0,
+            code_snippet=f"Set-Cookie: {set_cookie[:80]}...",
+            explanation="Cookie is missing SameSite, allowing cross-site requests to carry the cookie.",
+            fix_recommendation="Set SameSite=Lax or SameSite=Strict for session cookies.",
+            fix_before='response.set_cookie("session", value)',
+            fix_after='response.set_cookie("session", value, samesite="Lax")',
+            source="DAST",
+        ))
+
+    return findings
+
+
+def check_response_hardening(response_headers: dict, endpoint: str) -> List[Finding]:
+    """Check common passive response-hardening and disclosure controls."""
+    findings: List[Finding] = []
+    normalized = {str(k).lower(): str(v) for k, v in response_headers.items()}
+    server = normalized.get("server", "")
+    if server:
+        findings.append(Finding(
+            vuln_type=VulnerabilityType.SENSITIVE_DATA_EXPOSURE,
+            severity=Severity.LOW,
+            endpoint=endpoint,
+            file="HTTP response",
+            line=0,
+            code_snippet=f"Server: {server}",
+            explanation="The response discloses a server product or version in the Server header.",
+            fix_recommendation="Remove or minimize Server and framework version headers at the edge.",
+            source="DAST",
+            status="confirmed",
+            rule_id="PYSEC-DAST-004",
+            cwe="CWE-200",
+        ))
+    if "access-control-allow-origin" in normalized and normalized["access-control-allow-origin"] == "*":
+        findings.append(Finding(
+            vuln_type=VulnerabilityType.CORS_MISCONFIGURATION,
+            severity=Severity.MEDIUM,
+            endpoint=endpoint,
+            file="HTTP response",
+            line=0,
+            code_snippet="Access-Control-Allow-Origin: *",
+            explanation="The response permits requests from every origin.",
+            fix_recommendation="Allow only the documented trusted origins and never combine wildcard CORS with credentials.",
+            source="DAST",
+            status="confirmed",
+            rule_id="PYSEC-DAST-005",
+            cwe="CWE-942",
+        ))
     return findings

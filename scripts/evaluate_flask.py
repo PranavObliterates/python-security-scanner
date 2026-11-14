@@ -2,7 +2,7 @@
 Evaluation Framework for the Python Security Scanner
 
 Measures accuracy, precision, recall, F1 score and prints a confusion matrix.
-Run with: python evaluate_flask.py
+Run with: python -m scripts.evaluate_flask
 
 How it works:
   1. Define test cases: code snippets labeled as vulnerable or safe (SAST)

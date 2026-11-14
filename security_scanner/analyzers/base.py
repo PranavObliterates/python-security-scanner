@@ -2,8 +2,14 @@
 import ast
 import textwrap
 from abc import ABC, abstractmethod
+from functools import lru_cache
 from typing import List, Set, Optional, Any
 from ..models.finding import Finding
+
+
+@lru_cache(maxsize=128)
+def _parse_source(source_code: str) -> ast.Module:
+    return ast.parse(source_code)
 
 
 # Common patterns that indicate user input in Flask and Django
@@ -40,8 +46,9 @@ class BaseAnalyzer(ABC):
         self.endpoint = endpoint
         self.file_path = file_path
         self.source_code = textwrap.dedent(source_code)
+        self._source_lines = self.source_code.splitlines()
         self.findings: List[Finding] = []
-        self._tree: ast.Module = ast.parse(self.source_code)
+        self._tree = _parse_source(self.source_code)
         self._func_args = set()
         for node in ast.iter_child_nodes(self._tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -56,9 +63,8 @@ class BaseAnalyzer(ABC):
 
     def _get_line_text(self, lineno: int) -> str:
         """Get the source code text at a given line number."""
-        lines = self.source_code.splitlines()
-        if 1 <= lineno <= len(lines):
-            return lines[lineno - 1].strip()
+        if 1 <= lineno <= len(self._source_lines):
+            return self._source_lines[lineno - 1].strip()
         return ""
 
     def _is_user_input_name(self, name: str) -> bool:
@@ -210,4 +216,3 @@ class BaseAnalyzer(ABC):
             return self._is_node_tainted(node.operand, tainted)
 
         return False
-

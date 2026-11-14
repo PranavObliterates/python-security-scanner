@@ -2,7 +2,7 @@
 FastAPI Evaluation Framework for PySecure
 
 Measures accuracy, precision, recall, F1 score and prints confusion matrices for FastAPI SAST, DAST, and Config.
-Run with: python evaluate_fastapi.py
+Run with: python -m scripts.evaluate_fastapi
 """
 import sqlite3
 import sys

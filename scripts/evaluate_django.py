@@ -4,7 +4,7 @@ Django Evaluation Framework — measures accuracy, precision, recall for Django 
 Similar to evaluate_flask.py for Flask, this tests the scanner against Django-specific
 code patterns and apps.
 
-Run with: python evaluate_django.py
+Run with: python -m scripts.evaluate_django
 """
 import os
 import sqlite3
@@ -16,7 +16,7 @@ if not django_settings.configured:
     django_settings.configure(
         DEBUG=True,
         SECRET_KEY="test-secret-key-for-eval",
-        ROOT_URLCONF="evaluate_django",
+        ROOT_URLCONF="scripts.evaluate_django",
         ALLOWED_HOSTS=["*"],
         MIDDLEWARE=[
             "django.middleware.common.CommonMiddleware",

@@ -29,3 +29,9 @@ class TestDASTIntegration:
         findings = run_dast_tests(vulnerable_app, routes)
         for f in findings:
             assert f.source == "DAST"
+
+    def test_active_dast_uses_harmless_reflection_canary(self, vulnerable_app):
+        routes = discover_flask_routes(vulnerable_app)
+        findings = run_dast_tests(vulnerable_app, routes, active=True)
+        assert any(f.vuln_type == VulnerabilityType.XSS for f in findings)
+        assert all("pysecure-canary" in f.code_snippet for f in findings if f.vuln_type == VulnerabilityType.XSS)

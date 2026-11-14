@@ -47,9 +47,17 @@ def print_report(result: ScanResult) -> None:
     _safe_print(f"\n{BOLD}  SECURITY SCAN REPORT  --  {result.app_name}{RESET}")
     _safe_print(line)
     _safe_print(f"  Routes: {result.routes_scanned}   |   "
+                f"Tested: {result.routes_tested}   |   "
+                f"Forms: {len(result.forms_discovered)}   |   "
+                f"Browser pages: {result.browser_pages_tested}   |   "
                 f"Issues: {len(result.findings)}   |   "
                 f"Time: {result.scan_duration_seconds:.3f}s")
     _safe_print(line)
+
+    if result.warnings:
+        _safe_print("\n  --- WARNINGS ---")
+        for warning in result.warnings:
+            _safe_print(f"  [!] {warning}")
 
     if not result.findings:
         _safe_print(f"\n  {BOLD}[OK]{RESET} No security issues found! Great job.")

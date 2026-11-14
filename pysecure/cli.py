@@ -1,16 +1,23 @@
 """Command Line Interface for PySecure."""
+import logging
 import os
 import sys
 import re
 import argparse
 import importlib.util
+import requests
 from security_scanner.core.scanner import scan_app
+from security_scanner.models.finding import Severity
 from security_scanner.reporting.console import print_report
 from security_scanner.reporting.json_report import save_json_report
 from security_scanner.reporting.html_report import save_html_report
 from security_scanner.reporting.pdf_report import save_pdf_report
 from security_scanner.reporting.sarif_report import save_sarif_report
+from security_scanner.dynamic.remote import ScopeError, scan_remote_url
+from security_scanner.analyzers.dependencies import scan_dependency_manifests, scan_osv_advisories
 from security_scanner import __version__
+
+logger = logging.getLogger(__name__)
 
 
 SEVERITY_ORDER = {
@@ -37,6 +44,7 @@ def load_cli_config(target: str = "") -> dict:
                 with open(rc_path, "r", encoding="utf-8") as f:
                     return json.load(f)
             except Exception:
+                logger.debug("Could not read PySecure config at %s", rc_path, exc_info=True)
                 pass
 
         pyproj_path = os.path.join(d, "pyproject.toml")
@@ -52,6 +60,7 @@ def load_cli_config(target: str = "") -> dict:
                     if cfg and isinstance(cfg, dict):
                         return cfg
             except Exception:
+                logger.debug("Could not read PySecure settings from %s", pyproj_path, exc_info=True)
                 pass
     return {}
 
@@ -117,24 +126,33 @@ def load_app_from_path(app_target: str):
         if spec is None or spec.loader is None:
             raise ImportError(f"Could not load module specification from '{file_part}'")
         mod = importlib.util.module_from_spec(spec)
+        previous_module = sys.modules.get(spec.name)
+        sys.modules[spec.name] = mod
         try:
-            spec.loader.exec_module(mod)
-        except Exception as e:
-            # Check if this is a Django file requiring settings
-            if "DJANGO_SETTINGS_MODULE" in str(e) or not os.environ.get("DJANGO_SETTINGS_MODULE"):
-                try:
-                    with open(abs_path, "r", encoding="utf-8", errors="ignore") as f:
-                        content = f.read()
-                    m = re.search(r"['\"]DJANGO_SETTINGS_MODULE['\"]\s*,\s*['\"]([^'\"]+)['\"]", content)
-                    if m:
-                        os.environ.setdefault("DJANGO_SETTINGS_MODULE", m.group(1))
-                        import django
-                        django.setup()
-                        from django.core.wsgi import get_wsgi_application
-                        return get_wsgi_application()
-                except Exception:
-                    pass
-            raise
+            try:
+                logger.debug("Loading application module from %s", abs_path)
+                spec.loader.exec_module(mod)
+            except Exception as e:
+                # Check if this is a Django file requiring settings
+                if "DJANGO_SETTINGS_MODULE" in str(e) or not os.environ.get("DJANGO_SETTINGS_MODULE"):
+                    try:
+                        with open(abs_path, "r", encoding="utf-8", errors="ignore") as f:
+                            content = f.read()
+                        m = re.search(r"['\"]DJANGO_SETTINGS_MODULE['\"]\s*,\s*['\"]([^'\"]+)['\"]", content)
+                        if m:
+                            os.environ.setdefault("DJANGO_SETTINGS_MODULE", m.group(1))
+                            import django
+                            django.setup()
+                            from django.core.wsgi import get_wsgi_application
+                            return get_wsgi_application()
+                    except Exception:
+                        logger.debug("Django application fallback failed for %s", abs_path, exc_info=True)
+                raise
+        finally:
+            if previous_module is None:
+                sys.modules.pop(spec.name, None)
+            else:
+                sys.modules[spec.name] = previous_module
 
         if var_name:
             app_obj = getattr(mod, var_name, None)
@@ -161,10 +179,7 @@ def load_app_from_path(app_target: str):
             raise AttributeError(f"Could not find 'app' or 'application' object in '{file_part}'.")
         # Handle factory functions like create_app()
         if callable(app_obj) and not hasattr(app_obj, "route") and not hasattr(app_obj, "wsgi_app"):
-            try:
-                app_obj = app_obj()
-            except Exception:
-                pass
+            app_obj = app_obj()
         return app_obj
 
     # If not a file/dir and input contains path separators or file extension, fail fast
@@ -176,10 +191,7 @@ def load_app_from_path(app_target: str):
         mod = importlib.import_module(file_part)
         app_obj = getattr(mod, var_name or "app", None) or getattr(mod, "application", None)
         if callable(app_obj) and not hasattr(app_obj, "route") and not hasattr(app_obj, "wsgi_app"):
-            try:
-                app_obj = app_obj()
-            except Exception:
-                pass
+            app_obj = app_obj()
         if app_obj is None:
             raise AttributeError(f"Could not find 'app' or 'application' object in module '{file_part}'.")
         return app_obj
@@ -192,7 +204,7 @@ def main(argv=None):
         argv = sys.argv[1:]
 
     # Convenience: if user runs `pysecure app.py` instead of `pysecure scan app.py`
-    if argv and not argv[0].startswith("-") and argv[0] not in ("scan", "help"):
+    if argv and not argv[0].startswith("-") and argv[0] not in ("scan", "scan-url", "help"):
         argv = ["scan"] + argv
 
     parser = argparse.ArgumentParser(
@@ -204,7 +216,7 @@ def main(argv=None):
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
     # scan subcommand
-    scan_parser = subparsers.add_parser("scan", help="Scan a Flask or Django application")
+    scan_parser = subparsers.add_parser("scan", help="Scan a Flask, Django, or FastAPI application")
     scan_parser.add_argument(
         "target",
         help="Path to Python file or module (e.g. app.py, app.py:app, or wsgi:application)"
@@ -213,6 +225,21 @@ def main(argv=None):
         "--static-only",
         action="store_true",
         help="Run source analysis only; disable passive baseline requests."
+    )
+    scan_parser.add_argument(
+        "--active-dast",
+        action="store_true",
+        help="Send harmless canary probes through the local framework test client (opt-in).",
+    )
+    scan_parser.add_argument(
+        "--dependencies",
+        action="store_true",
+        help="Audit dependency manifests for unpinned requirements.",
+    )
+    scan_parser.add_argument(
+        "--osv",
+        action="store_true",
+        help="Query OSV.dev for known advisories affecting pinned dependencies (network required).",
     )
     scan_parser.add_argument(
         "--json",
@@ -261,6 +288,36 @@ def main(argv=None):
         metavar="RULES",
         help="Comma-separated list of vulnerability types or rule names to ignore (e.g. DEBUG_MODE,WEAK_CRYPTO)."
     )
+    scan_parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Log detailed scan stages and show tracebacks for failures.",
+    )
+
+    url_parser = subparsers.add_parser(
+        "scan-url",
+        help="Crawl and passively scan a localhost/private-network web application.",
+    )
+    url_parser.add_argument("url", help="HTTP(S) URL on localhost or a private IP address.")
+    url_parser.add_argument("--max-pages", type=int, default=50, help="Maximum HTML pages to crawl (default: 50).")
+    url_parser.add_argument("--max-depth", type=int, default=3, help="Maximum link depth (default: 3).")
+    url_parser.add_argument("--max-requests", type=int, default=150, help="Hard request budget (default: 150).")
+    url_parser.add_argument("--delay", type=float, default=0.25, help="Minimum seconds between requests (default: 0.25).")
+    url_parser.add_argument("--timeout", type=float, default=5.0, help="Per-request timeout in seconds (default: 5).")
+    url_parser.add_argument("--active", action="store_true", help="Send harmless reflection canaries to HTML pages.")
+    url_parser.add_argument("--auth-config", help="JSON login and explicit authorization rules; secrets must use environment references.")
+    url_parser.add_argument("--browser", action="store_true", help="Use optional Playwright to crawl rendered JavaScript pages.")
+    url_parser.add_argument("--dependencies", metavar="DIR", help="Also audit dependency manifests under a directory.")
+    url_parser.add_argument("--osv", action="store_true", help="Query OSV.dev for pinned dependency advisories.")
+    url_parser.add_argument("--json", metavar="FILE", help="Save JSON report.")
+    url_parser.add_argument("--html", metavar="FILE", help="Save HTML report.")
+    url_parser.add_argument("--pdf", metavar="FILE", help="Save PDF report.")
+    url_parser.add_argument("--sarif", metavar="FILE", help="Save SARIF report.")
+    url_parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Log detailed crawl requests and show tracebacks for failures.",
+    )
 
     args = parser.parse_args(argv)
 
@@ -268,16 +325,48 @@ def main(argv=None):
         parser.print_help()
         sys.exit(0 if len(argv) == 0 else 1)
 
+    logging.basicConfig(
+        level=logging.WARNING,
+        format="[%(levelname)s] %(name)s: %(message)s",
+    )
+    if args.debug:
+        logger.setLevel(logging.DEBUG)
+        logging.getLogger("security_scanner").setLevel(logging.DEBUG)
+
     if args.command == "scan":
+        if args.osv and not args.dependencies:
+            parser.error("--osv requires --dependencies.")
+        if args.active_dast and args.static_only:
+            parser.error("--active-dast cannot be used with --static-only.")
         print(f"\n[*] Loading application from: {args.target}...")
         try:
             app = load_app_from_path(args.target)
         except Exception as e:
+            if args.debug:
+                logger.exception("Application loading failed")
             print(f"[!] Error loading target app: {e}", file=sys.stderr)
             sys.exit(1)
 
-        print(f"[*] Starting PySecure scan (SAST + {'DAST' if not args.static_only else 'Static Only'})...")
-        result = scan_app(app, dynamic=not args.static_only)
+        mode = "DAST + active canaries" if args.active_dast else ("DAST" if not args.static_only else "Static Only")
+        print(f"[*] Starting PySecure scan (SAST + {mode})...")
+        try:
+            result = scan_app(
+                app,
+                dynamic=not args.static_only,
+                active_dast=args.active_dast,
+                dependency_root=(
+                    os.path.abspath(args.target)
+                    if args.dependencies and os.path.isdir(args.target)
+                    else os.path.dirname(os.path.abspath(args.target))
+                    if args.dependencies else ""
+                ),
+                osv_lookup=args.osv,
+            )
+        except Exception as e:
+            if args.debug:
+                logger.exception("Scan failed")
+            print(f"[!] Scan failed: {e}", file=sys.stderr)
+            sys.exit(1)
 
         # Load file-based config defaults (.pysecurerc or pyproject.toml [tool.pysecure])
         cfg = load_cli_config(args.target)
@@ -326,6 +415,52 @@ def main(argv=None):
             for f in result.findings
         )
         sys.exit(1 if has_violating_issues else 0)
+
+    if args.command == "scan-url":
+        if args.max_pages < 1 or args.max_depth < 0 or args.max_requests < 1:
+            parser.error("max-pages and max-requests must be positive; max-depth cannot be negative.")
+        if args.delay < 0.1 or args.timeout <= 0 or args.timeout > 30:
+            parser.error("delay must be at least 0.1 seconds and timeout must be between 0 and 30 seconds.")
+        if args.osv and not args.dependencies:
+            parser.error("--osv requires --dependencies DIR.")
+        try:
+            result = scan_remote_url(
+                args.url,
+                max_pages=args.max_pages,
+                max_depth=args.max_depth,
+                max_requests=args.max_requests,
+                delay=args.delay,
+                timeout=args.timeout,
+                active=args.active,
+                auth_config_path=args.auth_config,
+                browser=args.browser,
+            )
+            if args.dependencies:
+                result.findings.extend(scan_dependency_manifests(args.dependencies))
+                if args.osv:
+                    osv_findings, osv_warnings = scan_osv_advisories(args.dependencies)
+                    result.findings.extend(osv_findings)
+                    result.warnings.extend(osv_warnings)
+        except (ScopeError, OSError, ValueError, requests.RequestException) as exc:
+            if args.debug:
+                logger.exception("Remote scan failed")
+            print(f"[!] Remote scan failed: {exc}", file=sys.stderr)
+            sys.exit(2)
+        except Exception as exc:
+            if args.debug:
+                logger.exception("Remote scan failed unexpectedly")
+            print(f"[!] Remote scan failed: {exc}", file=sys.stderr)
+            sys.exit(2)
+        print_report(result)
+        if args.json:
+            save_json_report(result, args.json)
+        if args.html:
+            save_html_report(result, args.html)
+        if args.sarif:
+            save_sarif_report(result, args.sarif)
+        if args.pdf:
+            save_pdf_report(result, args.pdf, prompt_for_key=False)
+        sys.exit(1 if any(f.severity in (Severity.CRITICAL, Severity.HIGH) for f in result.findings) else 0)
 
 
 if __name__ == "__main__":

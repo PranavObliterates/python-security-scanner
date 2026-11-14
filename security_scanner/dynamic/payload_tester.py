@@ -4,10 +4,13 @@ This module intentionally does not generate or send exploit payloads. Vulnerabil
 identification comes from the source analyzers; dynamic checks make only benign
 baseline requests and report unexpected server errors for developer review.
 """
+import logging
 import re
 from typing import List
 
 from ..models.finding import Finding, Severity, VulnerabilityType
+
+logger = logging.getLogger(__name__)
 
 
 def _safe_path(path: str) -> str:
@@ -53,13 +56,14 @@ def _run_baseline(client, path: str) -> List[Finding]:
     try:
         response = client.get(_safe_path(path))
     except Exception:
+        logger.debug("Baseline request failed for %s", path, exc_info=True)
         return []
     if response.status_code >= 500:
         return [_baseline_error(path, response.status_code, _response_body(response))]
     return []
 
 
-def run_dast_tests(app, routes) -> List[Finding]:
+def run_dast_tests(app, routes, active: bool = False) -> List[Finding]:
     """Run non-invasive baseline checks against a Flask application.
 
     No query-string, form, JSON, template, SQL, or serialized attack data is
@@ -69,10 +73,39 @@ def run_dast_tests(app, routes) -> List[Finding]:
     findings: List[Finding] = []
     for route in routes:
         findings.extend(_run_baseline(client, route.path))
+        if active and "GET" in route.methods:
+            findings.extend(_run_canary(client, route.path))
     return findings
 
 
-def run_django_dast_tests(routes) -> List[Finding]:
+def _run_canary(client, path: str) -> List[Finding]:
+    """Send a harmless unique marker to detect reflected response content."""
+    marker = "pysecure-canary-9f31"
+    try:
+        response = client.get(_safe_path(path) + "?q=" + marker)
+    except Exception:
+        logger.debug("Canary request failed for %s", path, exc_info=True)
+        return []
+    body = _response_body(response)
+    if marker not in body:
+        return []
+    return [Finding(
+        vuln_type=VulnerabilityType.XSS,
+        severity=Severity.MEDIUM,
+        endpoint=path,
+        file="HTTP response",
+        line=0,
+        code_snippet=f"GET {path}?q={marker} reflected in response",
+        explanation="A harmless canary value was reflected in the response. Review output encoding and content type.",
+        fix_recommendation="Contextually escape untrusted output and return the correct content type.",
+        source="DAST",
+        status="confirmed",
+        rule_id="PYSEC-DAST-001",
+        cwe="CWE-79",
+    )]
+
+
+def run_django_dast_tests(routes, active: bool = False) -> List[Finding]:
     """Run non-invasive baseline checks against the configured Django app."""
     try:
         from django.test import Client as DjangoClient
@@ -83,10 +116,12 @@ def run_django_dast_tests(routes) -> List[Finding]:
     findings: List[Finding] = []
     for route in routes:
         findings.extend(_run_baseline(client, route.path))
+        if active and "GET" in route.methods:
+            findings.extend(_run_canary(client, route.path))
     return findings
 
 
-def run_fastapi_dast_tests(app, routes) -> List[Finding]:
+def run_fastapi_dast_tests(app, routes, active: bool = False) -> List[Finding]:
     """Run non-invasive baseline checks against a FastAPI application."""
     try:
         from fastapi.testclient import TestClient
@@ -96,9 +131,12 @@ def run_fastapi_dast_tests(app, routes) -> List[Finding]:
     try:
         client = TestClient(app)
     except Exception:
+        logger.debug("FastAPI test client setup failed", exc_info=True)
         return []
 
     findings: List[Finding] = []
     for route in routes:
         findings.extend(_run_baseline(client, route.path))
+        if active and "GET" in route.methods:
+            findings.extend(_run_canary(client, route.path))
     return findings

@@ -72,6 +72,8 @@ def generate_sarif_report(result: ScanResult) -> Dict[str, Any]:
                 "confidence": f.confidence,
                 "source": f.source,
                 "endpoint": f.endpoint,
+                "status": f.status,
+                "cwe": f.cwe,
             },
         }
         results.append(sarif_item)

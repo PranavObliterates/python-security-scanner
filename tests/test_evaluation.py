@@ -1,4 +1,4 @@
-from evaluate_flask import evaluate, evaluate_sast, evaluate_dast, run_analyzer  # type: ignore
+from scripts.evaluate_flask import evaluate, evaluate_sast, evaluate_dast, run_analyzer  # type: ignore
 
 
 class TestSASTEvaluation:
@@ -129,7 +129,7 @@ obj = pickle.loads(data)
 class TestFastAPIEvaluation:
 
     def test_fastapi_sast_evaluation_runs(self):
-        from evaluate_fastapi import evaluate_fastapi_sast
+        from scripts.evaluate_fastapi import evaluate_fastapi_sast
         metrics = evaluate_fastapi_sast()
         assert metrics is not None
         assert metrics["accuracy"] >= 80.0
@@ -137,14 +137,13 @@ class TestFastAPIEvaluation:
         assert metrics["recall"] >= 80.0
 
     def test_fastapi_config_evaluation_runs(self):
-        from evaluate_fastapi import evaluate_fastapi_config
+        from scripts.evaluate_fastapi import evaluate_fastapi_config
         metrics = evaluate_fastapi_config()
         assert metrics is not None
         assert metrics["accuracy"] >= 80.0
 
     def test_fastapi_combined_evaluation_runs(self):
-        from evaluate_fastapi import evaluate
+        from scripts.evaluate_fastapi import evaluate
         metrics = evaluate()
         assert metrics is not None
         assert metrics["accuracy"] >= 80.0
-

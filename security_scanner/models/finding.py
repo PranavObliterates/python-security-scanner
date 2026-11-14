@@ -30,6 +30,8 @@ class VulnerabilityType(Enum):
     WEAK_CRYPTO = "WEAK_CRYPTO"
     CORS_MISCONFIGURATION = "CORS_MISCONFIGURATION"
     JWT_VULNERABILITY = "JWT_VULNERABILITY"
+    DEPENDENCY_VULNERABILITY = "DEPENDENCY_VULNERABILITY"
+    UNPINNED_DEPENDENCY = "UNPINNED_DEPENDENCY"
 
     @property
     def owasp_category(self) -> str:
@@ -49,6 +51,8 @@ class VulnerabilityType(Enum):
             VulnerabilityType.MISSING_SECURITY_HEADER: "A05:2021 - Security Misconfiguration",
             VulnerabilityType.CORS_MISCONFIGURATION: "A05:2021 - Security Misconfiguration",
             VulnerabilityType.JWT_VULNERABILITY: "A07:2021 - Identification and Authentication Failures",
+            VulnerabilityType.DEPENDENCY_VULNERABILITY: "A06:2021 - Vulnerable and Outdated Components",
+            VulnerabilityType.UNPINNED_DEPENDENCY: "A06:2021 - Vulnerable and Outdated Components",
             VulnerabilityType.INSECURE_DESERIALIZATION: "A08:2021 - Software and Data Integrity Failures",
             VulnerabilityType.SSRF: "A10:2021 - Server-Side Request Forgery",
         }
@@ -70,3 +74,6 @@ class Finding:
     reference: str = ""
     confidence: str = "HIGH"  # HIGH, MEDIUM, LOW
     source: str = "SAST"     # SAST or DAST
+    status: str = "potential"  # potential, confirmed, informational
+    rule_id: str = ""
+    cwe: str = ""

@@ -53,6 +53,9 @@ def generate_html_report(result: ScanResult) -> str:
             </div>
             <h3 style="margin:8px 0 4px 0;color:#333;">{finding.vuln_type.value}</h3>
             <p style="color:#666;margin:4px 0;">
+                🧭 <strong>Rule:</strong> {_escape(finding.rule_id or finding.vuln_type.value)}
+                · <strong>Status:</strong> {_escape(finding.status)}
+                · <strong>CWE:</strong> {_escape(finding.cwe or 'n/a')}
                 📍 <strong>{finding.endpoint}</strong>
                 {f' (line {finding.line})' if finding.line > 0 else ''}
                 → {finding.file}
@@ -66,6 +69,25 @@ def generate_html_report(result: ScanResult) -> str:
             {fix_html}
             {ref_html}
         </div>"""
+
+    forms_html = ""
+    if result.forms_discovered:
+        form_items = []
+        for form in result.forms_discovered:
+            fields = ", ".join(form.get("fields", []))
+            form_items.append(
+                "<li><code>{}</code> {} at <code>{}</code>; fields: {}</li>".format(
+                    _escape(str(form.get("method", "get")).upper()),
+                    _escape(str(form.get("action", ""))),
+                    _escape(str(form.get("page", ""))),
+                    _escape(fields),
+                )
+            )
+        forms_html = (
+            '<section class="finding low"><h2>Discovered forms (not submitted)</h2><ul>'
+            + "".join(form_items)
+            + "</ul></section>"
+        )
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -128,12 +150,15 @@ def generate_html_report(result: ScanResult) -> str:
             <h1>🔒 Security Scan Report</h1>
             <p><strong>Application:</strong> {_escape(result.app_name)}</p>
             <div class="stats">
-                <div class="stat">📍 Routes: {result.routes_scanned}</div>
+                <div class="stat">📍 Routes: {result.routes_scanned} ({result.routes_tested} tested)</div>
+                <div class="stat">📝 Forms discovered: {len(result.forms_discovered)}</div>
                 <div class="stat">🔍 Issues: {len(result.findings)}</div>
                 <div class="stat">⏱️ Time: {result.scan_duration_seconds:.3f}s</div>
                 <div class="stat">📅 {datetime.now().strftime('%Y-%m-%d %H:%M')}</div>
             </div>
         </div>
+
+        {('<div class="finding low"><strong>Scan warnings:</strong><ul>' + ''.join('<li>' + _escape(w) + '</li>' for w in result.warnings) + '</ul></div>') if result.warnings else ''}
 
         <div class="summary-bar">
             <button id="btn-all" class="summary-badge active" style="background:#333;color:#fff;" onclick="filterSeverity('all')">
@@ -153,6 +178,7 @@ def generate_html_report(result: ScanResult) -> str:
             </button>
         </div>
 
+        {forms_html}
         {findings_html if findings_html else '<p style="text-align:center;padding:40px;color:#28a745;font-size:1.2em;">✅ No security issues found!</p>'}
     </div>
     <script>

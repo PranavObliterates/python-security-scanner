@@ -6,6 +6,7 @@ from .reporting.console import print_report
 from .reporting.json_report import save_json_report
 from .reporting.html_report import save_html_report
 from .reporting.pdf_report import save_pdf_report
+from .dynamic.remote import scan_remote_url
 
 __version__ = "0.2.0"
 __all__ = [
@@ -18,4 +19,5 @@ __all__ = [
     "save_json_report",
     "save_html_report",
     "save_pdf_report",
+    "scan_remote_url",
 ]

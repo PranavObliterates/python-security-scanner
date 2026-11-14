@@ -1,4 +1,5 @@
 """Main scanner orchestrator — ties everything together."""
+import logging
 import time
 import re
 from typing import List
@@ -18,10 +19,24 @@ from ..analyzers.open_redirect import OpenRedirectAnalyzer
 from ..analyzers.jwt_analyzer import JWTAnalyzer
 from ..analyzers.config import check_flask_config, check_django_config, check_fastapi_config
 from ..dynamic.payload_tester import run_dast_tests, run_django_dast_tests, run_fastapi_dast_tests
-from ..dynamic.response_analyzer import check_security_headers, check_cookie_security
+from ..dynamic.response_analyzer import (
+    check_security_headers,
+    check_cookie_security,
+    check_response_hardening,
+)
+from ..analyzers.dependencies import scan_dependency_manifests, scan_osv_advisories
+
+logger = logging.getLogger(__name__)
 
 
-def scan_app(app, dynamic: bool = True, framework: str = "auto") -> ScanResult:
+def scan_app(
+    app,
+    dynamic: bool = True,
+    framework: str = "auto",
+    active_dast: bool = False,
+    dependency_root: str = "",
+    osv_lookup: bool = False,
+) -> ScanResult:
     """
     Main entry point: scan a web application for security vulnerabilities.
 
@@ -38,11 +53,14 @@ def scan_app(app, dynamic: bool = True, framework: str = "auto") -> ScanResult:
         dynamic: Whether to run passive dynamic checks (DAST). No exploit
             payloads are generated or sent.
         framework: "flask", "django", or "auto" (detect automatically).
+        active_dast: Enable harmless canary probes in addition to passive checks.
+        dependency_root: Optional project path to audit dependency manifests.
+        osv_lookup: Query OSV.dev for pinned dependency advisories.
 
     Returns:
         ScanResult with all findings.
     """
-    start_time = time.time()
+    start_time = time.perf_counter()
 
     # Detect framework
     detected_framework = _detect_framework(app) if framework == "auto" else framework
@@ -59,6 +77,13 @@ def scan_app(app, dynamic: bool = True, framework: str = "auto") -> ScanResult:
         raise NotImplementedError(f"Framework '{detected_framework}' not yet supported.")
 
     result.routes_scanned = len(routes)
+    logger.debug("Discovered %d %s routes for %s", len(routes), detected_framework, result.app_name)
+    if dependency_root:
+        result.findings.extend(scan_dependency_manifests(dependency_root))
+        if osv_lookup:
+            osv_findings, osv_warnings = scan_osv_advisories(dependency_root)
+            result.findings.extend(osv_findings)
+            result.warnings.extend(osv_warnings)
 
     # Step 2: Static Analysis (SAST) on each route
     for route in routes:
@@ -67,6 +92,7 @@ def scan_app(app, dynamic: bool = True, framework: str = "auto") -> ScanResult:
             if route.file_path and ("site-packages" in route.file_path or "dist-packages" in route.file_path):
                 continue
 
+            route_started = time.perf_counter()
             analyzers = [
                 SQLInjectionAnalyzer(route.path, route.file_path or "unknown", route.source_code),
                 XSSAnalyzer(route.path, route.file_path or "unknown", route.source_code),
@@ -82,6 +108,12 @@ def scan_app(app, dynamic: bool = True, framework: str = "auto") -> ScanResult:
             ]
             for analyzer in analyzers:
                 result.findings.extend(analyzer.analyze())
+            logger.debug(
+                "Analyzed route %s with %d rules in %.3fs",
+                route.path,
+                len(analyzers),
+                time.perf_counter() - route_started,
+            )
 
     # Step 3: Global configuration checks
     if detected_framework == "flask":
@@ -92,10 +124,11 @@ def scan_app(app, dynamic: bool = True, framework: str = "auto") -> ScanResult:
         result.findings.extend(check_fastapi_config(app))
 
     # Step 4: Dynamic Analysis (DAST)
+    dast_started = time.perf_counter()
     if dynamic:
         try:
             if detected_framework == "flask":
-                dast_findings = run_dast_tests(app, routes)
+                dast_findings = run_dast_tests(app, routes, active=active_dast)
                 result.findings.extend(dast_findings)
 
                 # Also check security headers and cookies
@@ -111,12 +144,17 @@ def scan_app(app, dynamic: bool = True, framework: str = "auto") -> ScanResult:
                         result.findings.extend(
                             check_cookie_security(headers, route.path)
                         )
+                        result.findings.extend(
+                            check_response_hardening(headers, route.path)
+                        )
+                        result.routes_tested += 1
                         break
-                    except Exception:
+                    except (KeyError, RuntimeError, TypeError, ValueError) as exc:
+                        result.warnings.append(f"DAST response check skipped for {route.path}: {exc}")
                         continue
 
             elif detected_framework == "django":
-                dast_findings = run_django_dast_tests(routes)
+                dast_findings = run_django_dast_tests(routes, active=active_dast)
                 result.findings.extend(dast_findings)
 
                 # Check security headers via Django test client
@@ -130,12 +168,15 @@ def scan_app(app, dynamic: bool = True, framework: str = "auto") -> ScanResult:
                         result.findings.extend(
                             check_security_headers(headers, route.path)
                         )
+                        result.findings.extend(check_response_hardening(headers, route.path))
+                        result.routes_tested += 1
                         break
-                    except Exception:
+                    except (KeyError, RuntimeError, TypeError, ValueError) as exc:
+                        result.warnings.append(f"DAST response check skipped for {route.path}: {exc}")
                         continue
 
             elif detected_framework == "fastapi":
-                dast_findings = run_fastapi_dast_tests(app, routes)
+                dast_findings = run_fastapi_dast_tests(app, routes, active=active_dast)
                 result.findings.extend(dast_findings)
 
                 try:
@@ -152,20 +193,32 @@ def scan_app(app, dynamic: bool = True, framework: str = "auto") -> ScanResult:
                             result.findings.extend(
                                 check_cookie_security(headers, route.path)
                             )
+                            result.findings.extend(check_response_hardening(headers, route.path))
+                            result.routes_tested += 1
                             break
-                        except Exception:
+                        except (KeyError, RuntimeError, TypeError, ValueError) as exc:
+                            result.warnings.append(f"DAST response check skipped for {route.path}: {exc}")
                             continue
-                except Exception:
-                    pass
+                except (ImportError, RuntimeError, TypeError) as exc:
+                    result.warnings.append(f"FastAPI DAST unavailable: {exc}")
 
-        except Exception:
-            # DAST errors shouldn't crash the scan
-            pass
+        except (ImportError, RuntimeError, TypeError, ValueError) as exc:
+            result.warnings.append(f"DAST checks incomplete: {exc}")
+            logger.debug("DAST checks incomplete", exc_info=True)
+    if dynamic:
+        logger.debug("Completed DAST checks in %.3fs", time.perf_counter() - dast_started)
 
     # Step 5: Deduplicate
     result.findings = _deduplicate(result.findings)
 
-    result.scan_duration_seconds = time.time() - start_time
+    result.scan_duration_seconds = time.perf_counter() - start_time
+    logger.debug(
+        "Scan completed: %d findings, %d/%d routes tested, %.3fs",
+        len(result.findings),
+        result.routes_tested,
+        result.routes_scanned,
+        result.scan_duration_seconds,
+    )
     return result
 
 
