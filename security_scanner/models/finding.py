@@ -29,6 +29,7 @@ class VulnerabilityType(Enum):
     SSRF = "SSRF"
     WEAK_CRYPTO = "WEAK_CRYPTO"
     CORS_MISCONFIGURATION = "CORS_MISCONFIGURATION"
+    JWT_VULNERABILITY = "JWT_VULNERABILITY"
 
     @property
     def owasp_category(self) -> str:
@@ -47,6 +48,7 @@ class VulnerabilityType(Enum):
             VulnerabilityType.INSECURE_COOKIE: "A05:2021 - Security Misconfiguration",
             VulnerabilityType.MISSING_SECURITY_HEADER: "A05:2021 - Security Misconfiguration",
             VulnerabilityType.CORS_MISCONFIGURATION: "A05:2021 - Security Misconfiguration",
+            VulnerabilityType.JWT_VULNERABILITY: "A07:2021 - Identification and Authentication Failures",
             VulnerabilityType.INSECURE_DESERIALIZATION: "A08:2021 - Software and Data Integrity Failures",
             VulnerabilityType.SSRF: "A10:2021 - Server-Side Request Forgery",
         }

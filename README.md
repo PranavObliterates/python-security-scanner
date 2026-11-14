@@ -4,9 +4,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![OWASP Top 10](https://img.shields.io/badge/OWASP-Top%2010%20(2021)-orange.svg)](https://owasp.org/Top10/)
 
-**PySecure** is an embedded security scanner for Python web applications (**Flask, Django, and FastAPI**). It shifts security testing left by running both **Static Application Security Testing (SAST)** via AST analysis and **Dynamic Application Security Testing (DAST)** via in-memory simulated attacks right during development and CI/CD pipelines.
+**PySecure** is an installable security scanner for Python web applications (**Flask, Django, and FastAPI**). It shifts security testing left by running **Static Application Security Testing (SAST)** via AST analysis and **Dynamic Application Security Testing (DAST)** via safe, passive in-process checks during development and CI/CD pipelines.
 
 It generates human-friendly terminal reports, machine-readable JSON, visual HTML dashboards, and **executive PDF reports powered by Google Gemini AI**.
+
+> PySecure detects a broad set of OWASP Top 10 vulnerability classes across Python Flask, Django, and FastAPI applications.
+
+DAST is intentionally non-invasive: it uses framework test clients for benign baseline requests and response checks. It does not send exploit payloads or attack a running external service. SAST provides the source-level detection for injection and other dangerous data flows.
 
 ---
 
@@ -21,13 +25,14 @@ It generates human-friendly terminal reports, machine-readable JSON, visual HTML
 | **A02: Cryptographic Failures** | Broken Hashing (MD4, MD5, SHA-1, SHA-0) | SAST |
 | **A02: Cryptographic Failures** | Insecure Cookie Attributes | DAST (Runtime Headers) |
 | **A03: Injection** | SQL Injection (SQLi) | SAST (source-to-sink analysis) |
-| **A03: Injection** | Cross-Site Scripting (Reflected XSS) | SAST & DAST (Response Reflection) |
+| **A03: Injection** | Cross-Site Scripting (Reflected XSS) | SAST |
 | **A03: Injection** | Command Injection (RCE) | SAST |
-| **A03: Injection** | Server-Side Template Injection (SSTI) | SAST & DAST |
+| **A03: Injection** | Server-Side Template Injection (SSTI) | SAST |
 | **A05: Security Misconfiguration** | Debug Mode Enabled | SAST (Global Config) |
 | **A05: Security Misconfiguration** | CORS Wildcard with Credentials | SAST (Global Config) |
 | **A05: Security Misconfiguration** | Missing Security Headers (CSP, HSTS, X-Frame) | DAST |
-| **A08: Software & Data Integrity** | Insecure Deserialization (pickle, PyYAML) | SAST & DAST |
+| **A07: Identification & Authentication Failures** | JWT signature, algorithm, and hardcoded-key misuse | SAST |
+| **A08: Software & Data Integrity** | Insecure Deserialization (pickle, PyYAML) | SAST |
 | **A10: Server-Side Request Forgery** | SSRF (Unchecked HTTP requests) | SAST |
 
 ---
@@ -50,7 +55,7 @@ pip install pysecure-scanner
 
 ## 🏗️ Architecture & How It Works
 
-PySecure operates via a dual-engine analysis pipeline designed for maximum speed and zero false positives:
+PySecure operates via a dual-engine analysis pipeline designed for speed and reduced false positives:
 
 ```
                       ┌────────────────────────────────────────┐
@@ -184,20 +189,30 @@ PySecure does not self-modify or silently update itself. Automatic updates would
 
 ## 🧪 Running Tests & Evaluation
 
-PySecure includes a comprehensive evaluation suite with 100% precision and recall benchmarks:
+Run the automated test suite from the repository root:
 ```bash
-# Run all unit and integration tests
 pytest
-
-# Measure scanner accuracy and confusion matrix on Flask
-python evaluate_flask.py
-
-# Measure scanner accuracy and confusion matrix on Django
-python evaluate_django.py
-
-# Run full multi-application test suite
-python run_test_suite.py
 ```
+
+Optional framework evaluation scripts are also included:
+```bash
+python evaluate_flask.py
+python evaluate_django.py
+python evaluate_fastapi.py
+```
+
+---
+
+## 📁 Repository Layout
+
+- `pysecure/` — public CLI package.
+- `security_scanner/` — scanner engine, analyzers, DAST checks, models, and report generators.
+- `tests/` — unit and integration tests.
+- `examples/` — safe, vulnerable, and focused analyzer test applications.
+- `vuln-flask/` and `vuln-django/` — intentionally vulnerable demonstration applications. Run them only locally or in an isolated environment.
+- `evaluate_*.py` — optional accuracy evaluation scripts.
+
+Generated reports, databases, build artifacts, and local secrets are ignored and should not be committed. This README is the canonical project documentation.
 
 ---
 

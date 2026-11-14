@@ -15,6 +15,7 @@ from ..analyzers.path_traversal import PathTraversalAnalyzer
 from ..analyzers.ssrf import SSRFAnalyzer
 from ..analyzers.weak_crypto import WeakCryptoAnalyzer
 from ..analyzers.open_redirect import OpenRedirectAnalyzer
+from ..analyzers.jwt_analyzer import JWTAnalyzer
 from ..analyzers.config import check_flask_config, check_django_config, check_fastapi_config
 from ..dynamic.payload_tester import run_dast_tests, run_django_dast_tests, run_fastapi_dast_tests
 from ..dynamic.response_analyzer import check_security_headers, check_cookie_security
@@ -77,6 +78,7 @@ def scan_app(app, dynamic: bool = True, framework: str = "auto") -> ScanResult:
                 SSRFAnalyzer(route.path, route.file_path or "unknown", route.source_code),
                 WeakCryptoAnalyzer(route.path, route.file_path or "unknown", route.source_code),
                 OpenRedirectAnalyzer(route.path, route.file_path or "unknown", route.source_code),
+                JWTAnalyzer(route.path, route.file_path or "unknown", route.source_code),
             ]
             for analyzer in analyzers:
                 result.findings.extend(analyzer.analyze())
