@@ -8,11 +8,13 @@
 
 It generates human-friendly terminal reports, machine-readable JSON, visual HTML dashboards, and **executive PDF reports powered by Google Gemini AI**.
 
+This `install-lite` branch contains only the installable scanner package and its README; development tests, evaluation scripts, and demonstration applications are kept on `main`.
+
 > PySecure detects a broad set of OWASP Top 10 vulnerability classes across Python Flask, Django, and FastAPI applications.
 
 The framework scanner provides SAST and passive in-process checks. The optional URL scanner crawls localhost/private-network targets with strict page, request, timeout, and rate limits. Its opt-in active probe is a harmless reflection canary, not an exploit test.
 
-**Contents:** [Install](#-installation) · [Scan apps](#-usage) · [Remote DAST](#remote-dast) · [Tests](#-running-tests--evaluation)
+**Contents:** [Install](#-installation) · [Scan apps](#-usage) · [Remote DAST](#remote-dast)
 
 ---
 
@@ -43,19 +45,35 @@ The framework scanner provides SAST and passive in-process checks. The optional 
 
 ### Local Installation (Editable / Development Mode)
 ```bash
-git clone https://github.com/PranavObliterates/python-security-scanner.git
+git clone --branch install-lite --single-branch https://github.com/PranavObliterates/python-security-scanner.git
 cd python-security-scanner
 pip install -e .
 ```
 
-### From PyPI
+### From PyPI (after publication)
 ```bash
 pip install pysecure-scanner
 ```
+The PyPI release is not published yet. Use the Git branch install below for now.
+
+### Directly from the install-lite Git branch
+```bash
+python -m pip install "pysecure-scanner @ git+https://github.com/PranavObliterates/python-security-scanner.git@install-lite"
+```
+
+The base installation includes the scanner and remote HTTP checks. Optional features can be installed only when needed:
+
+```bash
+python -m pip install "pysecure-scanner[pdf] @ git+https://github.com/PranavObliterates/python-security-scanner.git@install-lite"
+python -m pip install "pysecure-scanner[ai] @ git+https://github.com/PranavObliterates/python-security-scanner.git@install-lite"
+python -m pip install "pysecure-scanner[browser] @ git+https://github.com/PranavObliterates/python-security-scanner.git@install-lite"
+```
+
+`pdf` adds PDF report generation; `ai` adds PDF reporting plus Gemini integration; `browser` adds Playwright. Flask, Django, and FastAPI should be installed in the environment where the target application runs.
 
 For JavaScript-rendered page discovery, install the optional browser extra and browser binary:
 ```bash
-pip install "pysecure-scanner[browser]"
+python -m pip install "pysecure-scanner[browser] @ git+https://github.com/PranavObliterates/python-security-scanner.git@install-lite"
 playwright install chromium
 ```
 
@@ -137,13 +155,12 @@ save_pdf_report(result, "security_report.pdf", prompt_for_key=True)
 ### 2. Command Line Interface (CLI)
 ```bash
 # Scan a Flask application by file or directory (auto-detects app.py)
-pysecure scan demos/vulnerable-flask/app.py --html report.html --pdf report.pdf
-pysecure scan demos/vulnerable-flask/ --static-only
+pysecure scan path/to/app.py --html report.html
+pysecure scan path/to/project/ --static-only
 
 # Scan a Django project by directory, manage.py, or wsgi module
-pysecure scan demos/vulnerable-django/
-pysecure scan demos/vulnerable-django/manage.py
-pysecure scan demos/vulnerable-django/vuln_django/wsgi.py --pdf django_audit.pdf
+pysecure scan path/to/django-project/
+pysecure scan path/to/django-project/manage.py
 
 # Scan with session-only Gemini API key for remediation guidance
 pysecure scan app.py --pdf audit.pdf --api-key YOUR_GEMINI_KEY
@@ -257,32 +274,12 @@ OSV lookups send package names and exact versions to `api.osv.dev`; use `--osv` 
 
 ---
 
-## 🧪 Running Tests & Evaluation
-
-Run the automated test suite from the repository root:
-```bash
-pytest
-```
-
-Optional framework evaluation scripts are also included:
-```bash
-python -m scripts.evaluate_flask
-python -m scripts.evaluate_django
-python -m scripts.evaluate_fastapi
-```
-
----
-
 ## 📁 Repository Layout
 
-- `pysecure/` — public CLI package.
-- `security_scanner/` — scanner engine, analyzers, DAST checks, models, and report generators.
-- `tests/` — unit and integration tests.
-- `examples/` — small safe and vulnerable samples plus analyzer fixtures.
-- `demos/vulnerable-flask/` and `demos/vulnerable-django/` — complete intentionally vulnerable apps; run only locally or in an isolated environment.
-- `scripts/` — optional framework accuracy evaluation modules.
+- `pysecure/` — command-line interface.
+- `security_scanner/` — scanner engine, analyzers, checks, models, and reports.
 
-Generated reports, databases, build artifacts, and local secrets are ignored and should not be committed. This README is the canonical project documentation.
+This install-only branch excludes tests, examples, vulnerable demos, evaluation scripts, and CI configuration; those remain on `main`. This README is the canonical project documentation.
 
 ### GitHub Actions (including scheduled scans)
 

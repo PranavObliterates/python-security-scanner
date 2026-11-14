@@ -11,7 +11,6 @@ from security_scanner.models.finding import Severity
 from security_scanner.reporting.console import print_report
 from security_scanner.reporting.json_report import save_json_report
 from security_scanner.reporting.html_report import save_html_report
-from security_scanner.reporting.pdf_report import save_pdf_report
 from security_scanner.reporting.sarif_report import save_sarif_report
 from security_scanner.dynamic.remote import ScopeError, scan_remote_url
 from security_scanner.analyzers.dependencies import scan_dependency_manifests, scan_osv_advisories
@@ -400,12 +399,17 @@ def main(argv=None):
             save_sarif_report(result, args.sarif)
             print(f"   [*] SARIF report saved to: {args.sarif}")
         if args.pdf:
-            save_pdf_report(
-                result,
-                args.pdf,
-                api_key=args.api_key,
-                prompt_for_key=not args.no_ai_prompt
-            )
+            from security_scanner import save_pdf_report
+            try:
+                save_pdf_report(
+                    result,
+                    args.pdf,
+                    api_key=args.api_key,
+                    prompt_for_key=not args.no_ai_prompt
+                )
+            except ImportError as exc:
+                print(f"[!] PDF report unavailable: {exc}", file=sys.stderr)
+                sys.exit(2)
             print(f"   [*] PDF report saved to: {args.pdf}")
 
         # Exit code reflects findings based on --fail-on threshold (defaults to CRITICAL)
@@ -459,7 +463,12 @@ def main(argv=None):
         if args.sarif:
             save_sarif_report(result, args.sarif)
         if args.pdf:
-            save_pdf_report(result, args.pdf, prompt_for_key=False)
+            from security_scanner import save_pdf_report
+            try:
+                save_pdf_report(result, args.pdf, prompt_for_key=False)
+            except ImportError as exc:
+                print(f"[!] PDF report unavailable: {exc}", file=sys.stderr)
+                sys.exit(2)
         sys.exit(1 if any(f.severity in (Severity.CRITICAL, Severity.HIGH) for f in result.findings) else 0)
 
 

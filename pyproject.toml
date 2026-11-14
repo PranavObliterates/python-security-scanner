@@ -40,15 +40,18 @@ classifiers = [
     "Framework :: FastAPI",
 ]
 dependencies = [
-    "flask>=2.0",
-    "markupsafe>=2.0",
-    "reportlab>=4.0.0",
     "requests>=2.28.0",
-    "google-genai>=0.1.0",
     "tomli>=2.0.0; python_version < '3.11'",
 ]
 
 [project.optional-dependencies]
+pdf = [
+    "reportlab>=4.0.0",
+]
+ai = [
+    "reportlab>=4.0.0",
+    "google-genai>=0.1.0",
+]
 browser = [
     "playwright>=1.40",
 ]
@@ -57,6 +60,7 @@ dev = [
     "coverage>=7.0",
     "build>=1.0.0",
     "twine>=4.0.0",
+    "reportlab>=4.0.0",
 ]
 
 [project.scripts]

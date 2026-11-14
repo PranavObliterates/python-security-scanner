@@ -4,16 +4,35 @@ Detects OWASP Top 10 vulnerabilities (SQLi, XSS, Command Injection, Path Travers
 SSRF, SSTI, Insecure Deserialization, Hardcoded Secrets, CSRF, and Misconfigurations).
 Includes Gemini AI-powered PDF security audit reporting.
 """
+from typing import Optional
+
 from security_scanner.core.scanner import scan_app
 from security_scanner.models.finding import Finding, Severity, VulnerabilityType
 from security_scanner.models.scan_result import ScanResult
 from security_scanner.reporting.console import print_report
 from security_scanner.reporting.json_report import save_json_report, generate_json_report
 from security_scanner.reporting.html_report import save_html_report, generate_html_report
-from security_scanner.reporting.pdf_report import save_pdf_report
 from security_scanner.reporting.sarif_report import save_sarif_report, generate_sarif_report
 from security_scanner.reporting.ai_advisor import get_session_api_key, generate_ai_security_summary
 from security_scanner.dynamic.remote import scan_remote_url
+
+
+def save_pdf_report(
+    result: ScanResult,
+    filepath: str = "security_report.pdf",
+    api_key: Optional[str] = None,
+    prompt_for_key: bool = False,
+) -> str:
+    """Generate a PDF report (requires the optional ``pdf`` extra)."""
+    try:
+        from security_scanner.reporting.pdf_report import save_pdf_report as generate_report
+    except ImportError as exc:
+        raise ImportError(
+            "PDF reports require the optional dependency. Install with "
+            "`pip install pysecure-scanner[pdf]`."
+        ) from exc
+    return generate_report(result, filepath, api_key, prompt_for_key)
+
 
 __version__ = "0.2.0"
 __all__ = [
