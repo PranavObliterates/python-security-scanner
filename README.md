@@ -41,21 +41,21 @@ The framework scanner provides SAST and passive in-process checks. The optional 
 
 ## 🚀 Installation
 
-### Local Installation (Editable / Development Mode)
+### Install directly from GitHub
+```bash
+pip install git+https://github.com/PranavObliterates/python-security-scanner.git
+```
+
+### Clone and install locally (development mode)
 ```bash
 git clone https://github.com/PranavObliterates/python-security-scanner.git
 cd python-security-scanner
 pip install -e .
 ```
 
-### From PyPI
+For JavaScript-rendered page discovery, install the optional browser extra:
 ```bash
-pip install webvenom
-```
-
-For JavaScript-rendered page discovery, install the optional browser extra and browser binary:
-```bash
-pip install "webvenom[browser]"
+pip install "git+https://github.com/PranavObliterates/python-security-scanner.git[browser]"
 playwright install chromium
 ```
 
@@ -319,17 +319,12 @@ jobs:
 
 ---
 
-## 📦 Publishing to PyPI
+## 📦 Project Source
 
-To build and publish this package to PyPI:
+This project lives on GitHub and is not published to PyPI.
+Install directly from the repository:
+
 ```bash
-# 1. Install build tools
-pip install build twine
-
-# 2. Build distributions (source and wheel)
-python -m build
-
-# 3. Upload to PyPI
-twine upload dist/*
+pip install git+https://github.com/PranavObliterates/python-security-scanner.git
 ```
 

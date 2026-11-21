@@ -12,35 +12,6 @@ license = "MIT"
 authors = [
     { name = "Pranav Shinde" }
 ]
-keywords = [
-    "security",
-    "sast",
-    "dast",
-    "owasp",
-    "owasp-top-10",
-    "vulnerability-scanner",
-    "flask",
-    "django",
-    "fastapi",
-    "gemini-ai",
-    "security-audit",
-    "webvenom",
-]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "Topic :: Security",
-    "Topic :: Software Development :: Quality Assurance",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Framework :: Flask",
-    "Framework :: Django",
-    "Framework :: FastAPI",
-]
 dependencies = [
     "flask>=2.0",
     "markupsafe>=2.0",
@@ -57,8 +28,6 @@ browser = [
 dev = [
     "pytest>=7.0",
     "coverage>=7.0",
-    "build>=1.0.0",
-    "twine>=4.0.0",
 ]
 
 [project.scripts]
