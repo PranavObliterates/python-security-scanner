@@ -6,25 +6,25 @@ from typing import List
 from ..models.finding import Finding, Severity, VulnerabilityType
 from ..models.scan_result import ScanResult
 from .route_discovery import discover_flask_routes, discover_django_routes, discover_fastapi_routes
-from ..analyzers.sql_injection import SQLInjectionAnalyzer
-from ..analyzers.xss import XSSAnalyzer
-from ..analyzers.secrets import SecretsAnalyzer
-from ..analyzers.ssti import SSTIAnalyzer
-from ..analyzers.deserialization import DeserializationAnalyzer
-from ..analyzers.command_injection import CommandInjectionAnalyzer
-from ..analyzers.path_traversal import PathTraversalAnalyzer
-from ..analyzers.ssrf import SSRFAnalyzer
-from ..analyzers.weak_crypto import WeakCryptoAnalyzer
-from ..analyzers.open_redirect import OpenRedirectAnalyzer
-from ..analyzers.jwt_analyzer import JWTAnalyzer
-from ..analyzers.config import check_flask_config, check_django_config, check_fastapi_config
+from ..analyzers.a03_sql_injection import SQLInjectionAnalyzer
+from ..analyzers.a03_cross_site_scripting import XSSAnalyzer
+from ..analyzers.a02_hardcoded_secrets import SecretsAnalyzer
+from ..analyzers.a03_server_side_template_injection import SSTIAnalyzer
+from ..analyzers.a08_insecure_deserialization import DeserializationAnalyzer
+from ..analyzers.a03_command_injection import CommandInjectionAnalyzer
+from ..analyzers.a01_path_traversal import PathTraversalAnalyzer
+from ..analyzers.a10_server_side_request_forgery import SSRFAnalyzer
+from ..analyzers.a02_weak_cryptography import WeakCryptoAnalyzer
+from ..analyzers.a01_open_redirect import OpenRedirectAnalyzer
+from ..analyzers.a07_broken_authentication import JWTAnalyzer
+from ..analyzers.a05_security_misconfiguration import check_flask_config, check_django_config, check_fastapi_config
 from ..dynamic.payload_tester import run_dast_tests, run_django_dast_tests, run_fastapi_dast_tests
 from ..dynamic.response_analyzer import (
     check_security_headers,
     check_cookie_security,
     check_response_hardening,
 )
-from ..analyzers.dependencies import scan_dependency_manifests, scan_osv_advisories
+from ..analyzers.a06_vulnerable_components import scan_dependency_manifests, scan_osv_advisories
 
 logger = logging.getLogger(__name__)
 

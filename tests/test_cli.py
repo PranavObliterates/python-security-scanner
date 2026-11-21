@@ -3,7 +3,7 @@ import pytest
 import os
 import json
 from unittest.mock import patch
-from pysecure.cli import main, load_app_from_path, load_cli_config
+from webvenom.cli import main, load_app_from_path, load_cli_config
 
 
 def test_cli_load_config_from_pyproject(tmp_path):
@@ -90,8 +90,8 @@ def test_cli_scan_ignore_filters_vulnerabilities(capsys):
 def test_scan_url_audits_dependency_manifests_once(tmp_path):
     from security_scanner.models.scan_result import ScanResult
 
-    with patch("pysecure.cli.scan_remote_url", return_value=ScanResult("test")):
-        with patch("pysecure.cli.scan_dependency_manifests", return_value=[]) as audit:
+    with patch("webvenom.cli.scan_remote_url", return_value=ScanResult("test")):
+        with patch("webvenom.cli.scan_dependency_manifests", return_value=[]) as audit:
             with pytest.raises(SystemExit) as exc:
                 main([
                     "scan-url",
@@ -112,7 +112,7 @@ def test_debug_flag_enables_scanner_diagnostics(caplog):
         return ScanResult("debug-test")
 
     caplog.set_level(logging.DEBUG)
-    with patch("pysecure.cli.scan_remote_url", side_effect=scan_with_debug_log):
+    with patch("webvenom.cli.scan_remote_url", side_effect=scan_with_debug_log):
         with pytest.raises(SystemExit) as exc:
             main(["scan-url", "http://127.0.0.1/", "--max-pages", "1", "--debug"])
     assert exc.value.code == 0

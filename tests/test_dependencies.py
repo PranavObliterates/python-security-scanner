@@ -1,4 +1,4 @@
-from security_scanner.analyzers.dependencies import scan_dependency_manifests, scan_osv_advisories
+from security_scanner.analyzers.a06_vulnerable_components import scan_dependency_manifests, scan_osv_advisories
 from security_scanner.models.finding import VulnerabilityType
 from unittest.mock import patch
 

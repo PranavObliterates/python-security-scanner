@@ -14,11 +14,11 @@ How it works:
 import sqlite3
 from flask import Flask, request, render_template_string  # type: ignore
 from markupsafe import escape
-from security_scanner.analyzers.sql_injection import SQLInjectionAnalyzer  # type: ignore
-from security_scanner.analyzers.xss import XSSAnalyzer  # type: ignore
-from security_scanner.analyzers.secrets import SecretsAnalyzer  # type: ignore
-from security_scanner.analyzers.ssti import SSTIAnalyzer  # type: ignore
-from security_scanner.analyzers.deserialization import DeserializationAnalyzer  # type: ignore
+from security_scanner.analyzers.a03_sql_injection import SQLInjectionAnalyzer  # type: ignore
+from security_scanner.analyzers.a03_cross_site_scripting import XSSAnalyzer  # type: ignore
+from security_scanner.analyzers.a02_hardcoded_secrets import SecretsAnalyzer  # type: ignore
+from security_scanner.analyzers.a03_server_side_template_injection import SSTIAnalyzer  # type: ignore
+from security_scanner.analyzers.a08_insecure_deserialization import DeserializationAnalyzer  # type: ignore
 from security_scanner.dynamic.payload_tester import run_dast_tests  # type: ignore
 from security_scanner.core.route_discovery import discover_flask_routes  # type: ignore
 from security_scanner.models.finding import VulnerabilityType  # type: ignore

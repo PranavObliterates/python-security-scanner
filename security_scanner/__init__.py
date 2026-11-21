@@ -8,7 +8,7 @@ from .reporting.html_report import save_html_report
 from .reporting.pdf_report import save_pdf_report
 from .dynamic.remote import scan_remote_url
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 __all__ = [
     "scan_app",
     "Finding",

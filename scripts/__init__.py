@@ -1,1 +1,1 @@
-"""Developer scripts for evaluating PySecure."""
+"""Developer scripts for evaluating WebVenom."""

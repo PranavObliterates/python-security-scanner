@@ -1,8 +1,15 @@
-"""PySecure — Embedded SAST + DAST Security Scanner for Python Web Applications.
+"""WebVenom — OWASP Top 10 SAST + DAST Security Scanner for Python Web Applications.
 
-Detects OWASP Top 10 vulnerabilities (SQLi, XSS, Command Injection, Path Traversal,
-SSRF, SSTI, Insecure Deserialization, Hardcoded Secrets, CSRF, and Misconfigurations).
-Includes Gemini AI-powered PDF security audit reporting.
+Detects all OWASP Top 10 (2021) vulnerability classes:
+  A01 Path Traversal & Open Redirect, A02 Hardcoded Secrets & Weak Crypto,
+  A03 SQLi / XSS / SSTI / Command Injection, A05 Security Misconfiguration,
+  A06 Vulnerable Components, A07 Broken Auth (JWT), A08 Insecure Deserialization,
+  A10 SSRF — plus Gemini AI-powered PDF executive reporting.
+
+Usage:
+    from webvenom import scan_app, print_report
+    result = scan_app(app)
+    print_report(result)
 """
 from security_scanner.core.scanner import scan_app
 from security_scanner.models.finding import Finding, Severity, VulnerabilityType
@@ -15,7 +22,7 @@ from security_scanner.reporting.sarif_report import save_sarif_report, generate_
 from security_scanner.reporting.ai_advisor import get_session_api_key, generate_ai_security_summary
 from security_scanner.dynamic.remote import scan_remote_url
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 __all__ = [
     "scan_app",
     "Finding",

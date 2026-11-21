@@ -5,7 +5,7 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 
 from security_scanner.dynamic.remote import ScopeError, scan_remote_url, _validate_private_url
-from pysecure.cli import main
+from webvenom.cli import main
 
 
 class _DemoHandler(BaseHTTPRequestHandler):

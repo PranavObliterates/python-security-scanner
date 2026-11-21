@@ -1,15 +1,15 @@
 """Tests for newly added OWASP Top 10 analyzers."""
-from security_scanner.analyzers.command_injection import CommandInjectionAnalyzer
-from security_scanner.analyzers.path_traversal import PathTraversalAnalyzer
-from security_scanner.analyzers.ssrf import SSRFAnalyzer
-from security_scanner.analyzers.weak_crypto import WeakCryptoAnalyzer
-from security_scanner.analyzers.open_redirect import OpenRedirectAnalyzer
-from security_scanner.analyzers.sql_injection import SQLInjectionAnalyzer
-from security_scanner.analyzers.xss import XSSAnalyzer
-from security_scanner.analyzers.ssti import SSTIAnalyzer
-from security_scanner.analyzers.deserialization import DeserializationAnalyzer
+from security_scanner.analyzers.a03_command_injection import CommandInjectionAnalyzer
+from security_scanner.analyzers.a01_path_traversal import PathTraversalAnalyzer
+from security_scanner.analyzers.a10_server_side_request_forgery import SSRFAnalyzer
+from security_scanner.analyzers.a02_weak_cryptography import WeakCryptoAnalyzer
+from security_scanner.analyzers.a01_open_redirect import OpenRedirectAnalyzer
+from security_scanner.analyzers.a03_sql_injection import SQLInjectionAnalyzer
+from security_scanner.analyzers.a03_cross_site_scripting import XSSAnalyzer
+from security_scanner.analyzers.a03_server_side_template_injection import SSTIAnalyzer
+from security_scanner.analyzers.a08_insecure_deserialization import DeserializationAnalyzer
 from security_scanner.models.finding import VulnerabilityType
-from pysecure.cli import load_app_from_path
+from webvenom.cli import load_app_from_path
 
 
 def test_command_injection_detected():

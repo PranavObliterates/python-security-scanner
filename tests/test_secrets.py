@@ -1,5 +1,5 @@
 """Tests for the Secrets analyzer."""
-from security_scanner.analyzers.secrets import SecretsAnalyzer
+from security_scanner.analyzers.a02_hardcoded_secrets import SecretsAnalyzer
 from security_scanner.models.finding import VulnerabilityType, Severity
 
 

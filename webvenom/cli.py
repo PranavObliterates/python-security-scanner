@@ -1,4 +1,4 @@
-"""Command Line Interface for PySecure."""
+"""Command Line Interface for WebVenom."""
 import logging
 import os
 import sys
@@ -14,8 +14,8 @@ from security_scanner.reporting.html_report import save_html_report
 from security_scanner.reporting.pdf_report import save_pdf_report
 from security_scanner.reporting.sarif_report import save_sarif_report
 from security_scanner.dynamic.remote import ScopeError, scan_remote_url
-from security_scanner.analyzers.dependencies import scan_dependency_manifests, scan_osv_advisories
-from security_scanner import __version__
+from security_scanner.analyzers.a06_vulnerable_components import scan_dependency_manifests, scan_osv_advisories
+from webvenom import __version__
 
 logger = logging.getLogger(__name__)
 
@@ -211,7 +211,7 @@ def main(argv=None):
         prog="pysecure",
         description="PySecure: Embedded SAST + DAST Security Scanner for Python Web Applications.",
     )
-    parser.add_argument("--version", action="version", version=f"pysecure {__version__}")
+    parser.add_argument("--version", action="version", version=f"webvenom {__version__}")
 
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 

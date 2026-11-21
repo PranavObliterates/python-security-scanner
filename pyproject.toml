@@ -3,9 +3,9 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pysecure-scanner"
-version = "0.2.0"
-description = "Embedded SAST + DAST Security Scanner for Python Web Applications (OWASP Top 10) with Gemini AI Reporting"
+name = "webvenom"
+version = "0.3.0"
+description = "OWASP Top 10 SAST + DAST Security Scanner for Python Web Applications with Gemini AI Reporting"
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
@@ -17,12 +17,14 @@ keywords = [
     "sast",
     "dast",
     "owasp",
+    "owasp-top-10",
     "vulnerability-scanner",
     "flask",
     "django",
     "fastapi",
     "gemini-ai",
     "security-audit",
+    "webvenom",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -60,11 +62,10 @@ dev = [
 ]
 
 [project.scripts]
-pysecure = "pysecure.cli:main"
-security-scanner = "pysecure.cli:main"
+webvenom = "webvenom.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["security_scanner*", "pysecure*"]
+include = ["security_scanner*", "webvenom*"]
 
 [tool.setuptools.package-data]
 "security_scanner.dynamic" = ["payloads/*.txt"]

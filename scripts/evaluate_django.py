@@ -41,12 +41,12 @@ from django.http import HttpResponse
 from django.test import Client as DjangoClient
 from django.urls import path
 from django.utils.html import escape as django_escape
-from security_scanner.analyzers.sql_injection import SQLInjectionAnalyzer
-from security_scanner.analyzers.xss import XSSAnalyzer
-from security_scanner.analyzers.secrets import SecretsAnalyzer
-from security_scanner.analyzers.ssti import SSTIAnalyzer
-from security_scanner.analyzers.deserialization import DeserializationAnalyzer
-from security_scanner.analyzers.config import check_django_config
+from security_scanner.analyzers.a03_sql_injection import SQLInjectionAnalyzer
+from security_scanner.analyzers.a03_cross_site_scripting import XSSAnalyzer
+from security_scanner.analyzers.a02_hardcoded_secrets import SecretsAnalyzer
+from security_scanner.analyzers.a03_server_side_template_injection import SSTIAnalyzer
+from security_scanner.analyzers.a08_insecure_deserialization import DeserializationAnalyzer
+from security_scanner.analyzers.a05_security_misconfiguration import check_django_config
 from security_scanner.core.route_discovery import discover_django_routes
 from security_scanner.dynamic.payload_tester import run_django_dast_tests
 from security_scanner.models.finding import VulnerabilityType

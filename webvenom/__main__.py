@@ -1,5 +1,4 @@
-from pysecure.cli import main
+from webvenom.cli import main
 
 if __name__ == "__main__":
     main()
-

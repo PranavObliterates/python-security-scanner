@@ -13,13 +13,13 @@ from starlette.testclient import TestClient
 
 from security_scanner.core.scanner import scan_app
 from security_scanner.core.route_discovery import discover_fastapi_routes
-from security_scanner.analyzers.config import check_fastapi_config
-from security_scanner.analyzers.sql_injection import SQLInjectionAnalyzer
-from security_scanner.analyzers.xss import XSSAnalyzer
-from security_scanner.analyzers.path_traversal import PathTraversalAnalyzer
-from security_scanner.analyzers.ssrf import SSRFAnalyzer
-from security_scanner.analyzers.command_injection import CommandInjectionAnalyzer
-from security_scanner.analyzers.weak_crypto import WeakCryptoAnalyzer
+from security_scanner.analyzers.a05_security_misconfiguration import check_fastapi_config
+from security_scanner.analyzers.a03_sql_injection import SQLInjectionAnalyzer
+from security_scanner.analyzers.a03_cross_site_scripting import XSSAnalyzer
+from security_scanner.analyzers.a01_path_traversal import PathTraversalAnalyzer
+from security_scanner.analyzers.a10_server_side_request_forgery import SSRFAnalyzer
+from security_scanner.analyzers.a03_command_injection import CommandInjectionAnalyzer
+from security_scanner.analyzers.a02_weak_cryptography import WeakCryptoAnalyzer
 from security_scanner.models.finding import VulnerabilityType
 
 # ─── SAST Test Cases ───────────────────────────────────────────────────────────

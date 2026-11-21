@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from security_scanner.core.scanner import scan_app
 from security_scanner.core.route_discovery import discover_fastapi_routes
-from security_scanner.analyzers.config import check_fastapi_config
+from security_scanner.analyzers.a05_security_misconfiguration import check_fastapi_config
 from security_scanner.models.finding import VulnerabilityType, Severity
 
 

@@ -1,6 +1,6 @@
 """Tests for configuration security checks."""
 from flask import Flask
-from security_scanner.analyzers.config import check_flask_config
+from security_scanner.analyzers.a05_security_misconfiguration import check_flask_config
 from security_scanner.models.finding import VulnerabilityType, Severity
 
 

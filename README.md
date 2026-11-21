@@ -1,4 +1,4 @@
-# PySecure — Python Security Scanner (SAST + DAST)
+# WebVenom — Python Security Scanner (SAST + DAST)
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
@@ -50,12 +50,12 @@ pip install -e .
 
 ### From PyPI
 ```bash
-pip install pysecure-scanner
+pip install webvenom
 ```
 
 For JavaScript-rendered page discovery, install the optional browser extra and browser binary:
 ```bash
-pip install "pysecure-scanner[browser]"
+pip install "webvenom[browser]"
 playwright install chromium
 ```
 
@@ -137,47 +137,47 @@ save_pdf_report(result, "security_report.pdf", prompt_for_key=True)
 ### 2. Command Line Interface (CLI)
 ```bash
 # Scan a Flask application by file or directory (auto-detects app.py)
-pysecure scan demos/vulnerable-flask/app.py --html report.html --pdf report.pdf
-pysecure scan demos/vulnerable-flask/ --static-only
+webvenom scan demos/vulnerable-flask/app.py --html report.html --pdf report.pdf
+webvenom scan demos/vulnerable-flask/ --static-only
 
 # Scan a Django project by directory, manage.py, or wsgi module
-pysecure scan demos/vulnerable-django/
-pysecure scan demos/vulnerable-django/manage.py
-pysecure scan demos/vulnerable-django/vuln_django/wsgi.py --pdf django_audit.pdf
+webvenom scan demos/vulnerable-django/
+webvenom scan demos/vulnerable-django/manage.py
+webvenom scan demos/vulnerable-django/vuln_django/wsgi.py --pdf django_audit.pdf
 
 # Scan with session-only Gemini API key for remediation guidance
-pysecure scan app.py --pdf audit.pdf --api-key YOUR_GEMINI_KEY
+webvenom scan app.py --pdf audit.pdf --api-key YOUR_GEMINI_KEY
 
 # Export SARIF for GitHub Code Scanning / CI
-pysecure scan app.py --sarif results.sarif
+webvenom scan app.py --sarif results.sarif
 
 # Static-only scan (fast mode without running test client)
-pysecure scan app.py --static-only --json report.json
+webvenom scan app.py --static-only --json report.json
 
 # Audit dependency manifests for unpinned requirements
-pysecure scan app.py --static-only --dependencies
+webvenom scan app.py --static-only --dependencies
 
 # Opt-in harmless canary checks through the local framework test client
-pysecure scan app.py --active-dast --no-ai-prompt
+webvenom scan app.py --active-dast --no-ai-prompt
 
 # Crawl a local development server (localhost/private IP only)
-pysecure scan-url http://127.0.0.1:5000/ --max-pages 40 --max-depth 3 --max-requests 100 --delay 0.25 --json dast.json
+webvenom scan-url http://127.0.0.1:5000/ --max-pages 40 --max-depth 3 --max-requests 100 --delay 0.25 --json dast.json
 
 # Use optional Playwright to discover links rendered by JavaScript
-pysecure scan-url http://127.0.0.1:5000/ --browser
+webvenom scan-url http://127.0.0.1:5000/ --browser
 
 # Query OSV.dev for known vulnerabilities in exact-pinned dependency versions
-pysecure scan . --static-only --dependencies --osv
+webvenom scan . --static-only --dependencies --osv
 
 # CI/CD Quality Gate: fail only on HIGH or CRITICAL issues
-pysecure scan app.py --fail-on HIGH
+webvenom scan app.py --fail-on HIGH
 
 # Enable detailed scan timings and crawl request diagnostics
-pysecure scan app.py --debug
-pysecure scan-url http://127.0.0.1:5000/ --debug
+webvenom scan app.py --debug
+webvenom scan-url http://127.0.0.1:5000/ --debug
 
 # Filter output by minimum severity and ignore specific rules
-pysecure scan app.py --severity MEDIUM --ignore DEBUG_MODE,WEAK_CRYPTO
+webvenom scan app.py --severity MEDIUM --ignore DEBUG_MODE,WEAK_CRYPTO
 ```
 
 ### 3. Configuration Files (`pyproject.toml` or `.pysecurerc`)
@@ -248,7 +248,7 @@ Authentication is supplied as a JSON workflow file. Put secret values in environ
 The optional `csrf` entry fetches a page first and reads the named hidden input field into the login form. Set `PYSECURE_TEST_USERNAME` and `PYSECURE_TEST_PASSWORD` in the shell or CI secret store, then run:
 
 ```bash
-pysecure scan-url http://127.0.0.1:5000/ --auth-config dast-auth.json
+webvenom scan-url http://127.0.0.1:5000/ --auth-config dast-auth.json
 ```
 
 Authorization checks run only for paths explicitly listed in the workflow. The scanner compares the expected anonymous and authenticated status codes; it does not infer a site's authorization policy. Auth sessions and credentials are held only in process memory and are not written to reports.
@@ -309,7 +309,7 @@ jobs:
       - name: Install PySecure
         run: pip install .
       - name: Scan source
-        run: pysecure scan . --static-only --dependencies --sarif pysecure.sarif --fail-on HIGH
+        run: webvenom scan . --static-only --dependencies --sarif pysecure.sarif --fail-on HIGH
       - name: Upload SARIF
         if: always()
         uses: github/codeql-action/upload-sarif@v3
@@ -332,3 +332,4 @@ python -m build
 # 3. Upload to PyPI
 twine upload dist/*
 ```
+

@@ -1,6 +1,6 @@
 """Tests for the SQL Injection analyzer."""
-from security_scanner.analyzers.sql_injection import SQLInjectionAnalyzer
-from security_scanner.analyzers.xss import XSSAnalyzer
+from security_scanner.analyzers.a03_sql_injection import SQLInjectionAnalyzer
+from security_scanner.analyzers.a03_cross_site_scripting import XSSAnalyzer
 from security_scanner.models.finding import VulnerabilityType 
 
 
